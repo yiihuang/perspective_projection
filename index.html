@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D Cube Projection</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        #container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            flex-wrap: wrap; /* Allow wrapping for smaller screens */
+        }
+        .view {
+            flex: 1;
+            min-width: 300px; /* Minimum width for views */
+            min-height: 300px;
+            position: relative;
+            border: 1px solid #d1d5db;
+        }
+        #view3D {
+            background-color: #ffffff;
+            cursor: move;
+        }
+        #view2D {
+            background-color: #f9fafb;
+            cursor: ns-resize;
+        }
+        canvas {
+            display: block;
+        }
+        h1 {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: 0;
+            padding: 8px 16px;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            text-align: center;
+            z-index: 10;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .slider-container label {
+            font-size: 0.9em;
+            width: 100px;
+        }
+        .slider-container input[type="range"] {
+            width: 200px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="container">
+        <div id="view3D" class="view">
+            <h1>3D Scene (Left-drag: Rotate Cube, Right-drag: Rotate Camera)</h1>
+        </div>
+        <div id="view2D" class="view">
+            <h1>2D Image Plane Projection (Drag Up/Down to Zoom)</h1>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="slider-container">
+            <label for="viewpointY">Viewpoint Y</label>
+            <input type="range" id="viewpointY" min="-10" max="10" value="2" step="0.1">
+        </div>
+        <div class="slider-container">
+            <label for="viewpointZ">Viewpoint Z</label>
+            <input type="range" id="viewpointZ" min="3" max="20" value="8" step="0.1">
+        </div>
+        <div class="slider-container">
+            <label for="zoom3D">3D Zoom</label>
+            <input type="range" id="zoom3D" min="10" max="40" value="16.5" step="0.1">
+        </div>
+        <div class="slider-container">
+            <label for="cubeRotX">Cube Rot X</label>
+            <input type="range" id="cubeRotX" min="-180" max="180" value="0" step="1">
+        </div>
+        <div class="slider-container">
+            <label for="cubeRotY">Cube Rot Y</label>
+            <input type="range" id="cubeRotY" min="-180" max="180" value="0" step="1">
+        </div>
+        <div class="slider-container">
+            <label for="cubeRotZ">Cube Rot Z</label>
+            <input type="range" id="cubeRotZ" min="-180" max="180" value="0" step="1">
+        </div>
+    </div>
+
+    <script>
+        // --- Core Scene Components ---
+        let scene3D, camera3D, renderer3D;
+        let scene2D, camera2D, renderer2D;
+        let cube, viewpointSphere, imagePlane, projectionLinesGroup, projectedCubeLines;
+        let vanishingPointsGroup, extensionLinesGroup, projectedViewpointMarker;
+        
+        // --- Parameters ---
+        const CUBE_SIZE = 4;
+        const IMAGE_PLANE_Z = 2;
+        let viewpointPosition = new THREE.Vector3(0, 2, 8);
+        
+        // Local rotation tracking for true local axis rotations
+        let cubeLocalRotation = { x: 0, y: 0, z: 0 };
+
+        // --- Mouse Interaction ---
+        let isCubeDragging = false;
+        let isSceneDragging = false;
+        let isZooming2D = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let zoomLevel2D = 25;
+
+        function init() {
+            // === Setup 3D View ===
+            const view3D = document.getElementById('view3D');
+            scene3D = new THREE.Scene();
+            scene3D.background = new THREE.Color(0xffffff);
+
+            // Camera
+            camera3D = new THREE.PerspectiveCamera(75, view3D.clientWidth / view3D.clientHeight, 0.1, 1000);
+            camera3D.position.set(8, 8, 12);
+            camera3D.lookAt(new THREE.Vector3(0,0,0));
+
+            // Renderer
+            renderer3D = new THREE.WebGLRenderer({ antialias: true });
+            renderer3D.setSize(view3D.clientWidth, view3D.clientHeight);
+            view3D.appendChild(renderer3D.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene3D.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7.5);
+            scene3D.add(directionalLight);
+
+            // === Setup 2D View ===
+            const view2D = document.getElementById('view2D');
+            scene2D = new THREE.Scene();
+            scene2D.background = new THREE.Color(0xf9fafb);
+
+            // Camera (Orthographic for 2D)
+            camera2D = new THREE.OrthographicCamera(0, 0, 0, 0, 1, 1000);
+            camera2D.position.z = 5;
+
+            // Renderer
+            renderer2D = new THREE.WebGLRenderer({ antialias: true });
+            renderer2D.setSize(view2D.clientWidth, view2D.clientHeight);
+            view2D.appendChild(renderer2D.domElement);
+
+            // --- Create Objects ---
+            createSceneObjects();
+            
+            // --- Set initial 2D Camera zoom ---
+            update2DCamera();
+
+            // --- Event Listeners ---
+            setupEventListeners();
+            
+            // Start the animation loop
+            animate();
+        }
+
+        function createSceneObjects() {
+            // Cube
+            const cubeGeometry = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+            const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0x00aaff, opacity: 0.75, transparent: true });
+            cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            cube.position.z = -5;
+            scene3D.add(cube);
+            
+            const edges = new THREE.EdgesGeometry(cubeGeometry);
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x004466 });
+            const cubeEdges = new THREE.LineSegments(edges, lineMaterial);
+            cube.add(cubeEdges);
+
+            // Viewpoint Sphere
+            const viewpointGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+            const viewpointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            viewpointSphere = new THREE.Mesh(viewpointGeometry, viewpointMaterial);
+            scene3D.add(viewpointSphere);
+
+            // Image Plane
+            const planeGeometry = new THREE.PlaneGeometry(10, 10);
+            const planeMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
+            imagePlane = new THREE.Mesh(planeGeometry, planeMaterial);
+            imagePlane.position.z = IMAGE_PLANE_Z;
+            scene3D.add(imagePlane);
+            
+            const planeEdges = new THREE.EdgesGeometry(planeGeometry);
+            const planeEdgesMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff, opacity: 0.5 });
+            const planeBorder = new THREE.LineSegments(planeEdges, planeEdgesMaterial);
+            imagePlane.add(planeBorder);
+
+            const gridHelper = new THREE.GridHelper(20, 20, 0xcccccc, 0xdddddd);
+            gridHelper.position.y = -5;
+            scene3D.add(gridHelper);
+
+            // Projection lines
+            projectionLinesGroup = new THREE.Group();
+            scene3D.add(projectionLinesGroup);
+            
+            projectedCubeLines = new THREE.Group();
+            scene2D.add(projectedCubeLines);
+
+            // Vanishing Points and Lines
+            vanishingPointsGroup = new THREE.Group();
+            scene2D.add(vanishingPointsGroup);
+            extensionLinesGroup = new THREE.Group();
+            scene2D.add(extensionLinesGroup);
+
+            // MODIFICATION: Create a marker for the projected viewpoint in the 2D scene
+            const pvRingGeom = new THREE.RingGeometry(0.15, 0.2, 24);
+            const pvRingMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide });
+            projectedViewpointMarker = new THREE.Mesh(pvRingGeom, pvRingMat);
+            scene2D.add(projectedViewpointMarker);
+
+            const planeBoundaryPoints = [
+                new THREE.Vector3(-5, -5, 0),
+                new THREE.Vector3( 5, -5, 0),
+                new THREE.Vector3( 5,  5, 0),
+                new THREE.Vector3(-5,  5, 0)
+            ];
+            const planeBoundaryGeom = new THREE.BufferGeometry().setFromPoints(planeBoundaryPoints);
+            const planeBoundaryMat = new THREE.LineBasicMaterial({ color: 0x6667ab });
+            const planeBoundary = new THREE.LineLoop(planeBoundaryGeom, planeBoundaryMat);
+            scene2D.add(planeBoundary);
+
+
+            updateProjection();
+        }
+        
+        function updateProjection() {
+            viewpointSphere.position.copy(viewpointPosition);
+            // MODIFICATION: Update the 2D viewpoint marker's position
+            projectedViewpointMarker.position.set(viewpointPosition.x, viewpointPosition.y, 0.1);
+
+            // Clear old lines and points
+            projectionLinesGroup.children.forEach(c => c.geometry.dispose());
+            projectionLinesGroup.remove(...projectionLinesGroup.children);
+            projectedCubeLines.children.forEach(c => c.geometry.dispose());
+            projectedCubeLines.remove(...projectedCubeLines.children);
+            vanishingPointsGroup.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
+            vanishingPointsGroup.remove(...vanishingPointsGroup.children);
+            extensionLinesGroup.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
+            extensionLinesGroup.remove(...extensionLinesGroup.children);
+            
+            cube.updateMatrixWorld();
+
+            const halfSize = CUBE_SIZE / 2;
+            const localVertices = [
+                new THREE.Vector3(-halfSize, -halfSize, -halfSize), new THREE.Vector3( halfSize, -halfSize, -halfSize),
+                new THREE.Vector3( halfSize,  halfSize, -halfSize), new THREE.Vector3(-halfSize,  halfSize, -halfSize),
+                new THREE.Vector3(-halfSize, -halfSize,  halfSize), new THREE.Vector3( halfSize, -halfSize,  halfSize),
+                new THREE.Vector3( halfSize,  halfSize,  halfSize), new THREE.Vector3(-halfSize,  halfSize,  halfSize)
+            ];
+            
+            const worldVertices = localVertices.map(v => v.clone().applyMatrix4(cube.matrixWorld));
+            const projectedVertices = [];
+
+            // Project Vertices and draw 3D projection lines
+            worldVertices.forEach(worldVertex => {
+                const lineMat = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 });
+                projectionLinesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([viewpointPosition, worldVertex]), lineMat));
+                
+                const x = worldVertex.x - viewpointPosition.x;
+                const y = worldVertex.y - viewpointPosition.y;
+                const z = worldVertex.z - viewpointPosition.z;
+
+                if (z !== 0) {
+                     const x_proj = x * (IMAGE_PLANE_Z - viewpointPosition.z) / z + viewpointPosition.x;
+                     const y_proj = y * (IMAGE_PLANE_Z - viewpointPosition.z) / z + viewpointPosition.y;
+                     projectedVertices.push(new THREE.Vector2(x_proj, y_proj));
+                } else {
+                     projectedVertices.push(new THREE.Vector2(Infinity, Infinity));
+                }
+            });
+
+            // Draw projected cube edges
+            const edges = [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ];
+            const projectedLineMaterial = new THREE.LineBasicMaterial({ color: 0x0077cc, linewidth: 2 });
+            for (let i = 0; i < edges.length; i += 2) {
+                const p1 = projectedVertices[edges[i]];
+                const p2 = projectedVertices[edges[i+1]];
+                if (isFinite(p1.x) && isFinite(p1.y) && isFinite(p2.x) && isFinite(p2.y)) {
+                    projectedCubeLines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1,p2]), projectedLineMaterial));
+                }
+            }
+
+            // --- Calculate and Draw Vanishing Points and Lines ---
+
+            const dirX = new THREE.Vector3().subVectors(worldVertices[1], worldVertices[0]);
+            const dirY = new THREE.Vector3().subVectors(worldVertices[3], worldVertices[0]);
+            const dirZ = new THREE.Vector3().subVectors(worldVertices[4], worldVertices[0]);
+
+            const vanishingPoints = [
+                { dir: dirX, color: 0xff4136 }, // Red
+                { dir: dirY, color: 0x2ecc40 }, // Green
+                { dir: dirZ, color: 0x0074d9 }  // Blue
+            ].map(item => {
+                let vp = new THREE.Vector2(Infinity, Infinity);
+                const dz = item.dir.z;
+                if (Math.abs(dz) > 0.0001) {
+                    const t = (IMAGE_PLANE_Z - viewpointPosition.z) / dz;
+                    vp.x = viewpointPosition.x + t * item.dir.x;
+                    vp.y = viewpointPosition.y + t * item.dir.y;
+                }
+                return { point: vp, color: item.color };
+            });
+
+            vanishingPoints.forEach(vpData => {
+                if (isFinite(vpData.point.x) && isFinite(vpData.point.y)) {
+                    const vpGeom = new THREE.CircleGeometry(0.15, 16);
+                    const vpMat = new THREE.MeshBasicMaterial({ color: vpData.color });
+                    const vpMesh = new THREE.Mesh(vpGeom, vpMat);
+                    vpMesh.position.set(vpData.point.x, vpData.point.y, 0);
+                    vanishingPointsGroup.add(vpMesh);
+                }
+            });
+
+            const edgeAxisMapping = {
+                0: [0, 1,  2, 3,  4, 5,  6, 7], // X-axis edges
+                1: [0, 3,  1, 2,  4, 7,  5, 6], // Y-axis edges
+                2: [0, 4,  1, 5,  2, 6,  3, 7]  // Z-axis edges
+            };
+
+            [vanishingPoints[0], vanishingPoints[1], vanishingPoints[2]].forEach((vpData, axisIndex) => {
+                if (!isFinite(vpData.point.x) || !isFinite(vpData.point.y)) return;
+
+                const extensionMat = new THREE.LineDashedMaterial({
+                    color: vpData.color,
+                    dashSize: 0.2,
+                    gapSize: 0.2,
+                    opacity: 0.5,
+                    transparent: true
+                });
+
+                const axisEdges = edgeAxisMapping[axisIndex];
+                for (const vertexIndex of axisEdges) {
+                    const p1 = projectedVertices[vertexIndex];
+                    if (isFinite(p1.x) && isFinite(p1.y)) {
+                        const lineGeom = new THREE.BufferGeometry().setFromPoints([p1, vpData.point]);
+                        const line = new THREE.Line(lineGeom, extensionMat);
+                        line.computeLineDistances();
+                        extensionLinesGroup.add(line);
+                    }
+                }
+            });
+        }
+
+        function setupEventListeners() {
+            const view3D = document.getElementById('view3D');
+            const view2D = document.getElementById('view2D');
+            
+            view3D.addEventListener('mousedown', (e) => {
+                previousMousePosition.x = e.clientX;
+                previousMousePosition.y = e.clientY;
+                if (e.button === 0) { // Left-click
+                    isCubeDragging = true;
+                } else if (e.button === 2) { // Right-click
+                    isSceneDragging = true;
+                }
+            });
+            
+            view2D.addEventListener('mousedown', (e) => {
+                if(e.button === 0) {
+                    isZooming2D = true;
+                    previousMousePosition.y = e.clientY;
+                }
+            });
+
+            view3D.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isCubeDragging && !isSceneDragging && !isZooming2D) return;
+
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                if (isCubeDragging) {
+                    // Apply local axis rotations for mouse drag
+                    cube.rotateOnAxis(new THREE.Vector3(0, 1, 0), deltaX * 0.005); // Y rotation (yaw)
+                    cube.rotateOnAxis(new THREE.Vector3(1, 0, 0), deltaY * 0.005); // X rotation (pitch)
+                    
+                    // Update our tracking variables
+                    cubeLocalRotation.y += deltaX * 0.005 * 180 / Math.PI;
+                    cubeLocalRotation.x += deltaY * 0.005 * 180 / Math.PI;
+                    
+                    // Update slider values to match current rotation
+                    document.getElementById('cubeRotX').value = Math.round(cubeLocalRotation.x);
+                    document.getElementById('cubeRotY').value = Math.round(cubeLocalRotation.y);
+                    document.getElementById('cubeRotZ').value = Math.round(cubeLocalRotation.z);
+                    
+                    updateProjection();
+                } else if (isSceneDragging) {
+                    const yAxis = new THREE.Vector3(0, 1, 0);
+                    const xAxis = new THREE.Vector3().setFromMatrixColumn(camera3D.matrix, 0);
+                    camera3D.position.applyAxisAngle(yAxis, -deltaX * 0.005);
+                    camera3D.position.applyAxisAngle(xAxis, -deltaY * 0.005);
+                    camera3D.lookAt(scene3D.position);
+                } else if (isZooming2D) {
+                    zoomLevel2D += deltaY * 0.1;
+                    zoomLevel2D = Math.max(10, Math.min(40, zoomLevel2D));
+                    update2DCamera();
+                }
+                
+                previousMousePosition.x = e.clientX;
+                previousMousePosition.y = e.clientY;
+            });
+            
+            window.addEventListener('mouseup', () => {
+                isCubeDragging = false;
+                isSceneDragging = false;
+                isZooming2D = false;
+            });
+            window.addEventListener('mouseleave', () => {
+                isCubeDragging = false;
+                isSceneDragging = false;
+                isZooming2D = false;
+            });
+
+            document.getElementById('viewpointY').addEventListener('input', (e) => {
+                viewpointPosition.y = parseFloat(e.target.value);
+                updateProjection();
+            });
+
+            document.getElementById('viewpointZ').addEventListener('input', (e) => {
+                viewpointPosition.z = parseFloat(e.target.value);
+                updateProjection();
+            });
+            
+            document.getElementById('zoom3D').addEventListener('input', (e) => {
+                const newDistance = parseFloat(e.target.value);
+                const currentDistance = camera3D.position.length();
+                if (currentDistance > 0) {
+                    const scale = newDistance / currentDistance;
+                    camera3D.position.multiplyScalar(scale);
+                }
+            });
+
+            // Cube rotation sliders - using local axis rotations
+            document.getElementById('cubeRotX').addEventListener('input', (e) => {
+                const newRotationX = parseFloat(e.target.value);
+                const deltaX = newRotationX - cubeLocalRotation.x;
+                cubeLocalRotation.x = newRotationX;
+                
+                // Rotate around the cube's local X axis
+                cube.rotateOnAxis(new THREE.Vector3(1, 0, 0), deltaX * Math.PI / 180);
+                updateProjection();
+            });
+
+            document.getElementById('cubeRotY').addEventListener('input', (e) => {
+                const newRotationY = parseFloat(e.target.value);
+                const deltaY = newRotationY - cubeLocalRotation.y;
+                cubeLocalRotation.y = newRotationY;
+                
+                // Rotate around the cube's local Y axis
+                cube.rotateOnAxis(new THREE.Vector3(0, 1, 0), deltaY * Math.PI / 180);
+                updateProjection();
+            });
+
+            document.getElementById('cubeRotZ').addEventListener('input', (e) => {
+                const newRotationZ = parseFloat(e.target.value);
+                const deltaZ = newRotationZ - cubeLocalRotation.z;
+                cubeLocalRotation.z = newRotationZ;
+                
+                // Rotate around the cube's local Z axis
+                cube.rotateOnAxis(new THREE.Vector3(0, 0, 1), deltaZ * Math.PI / 180);
+                updateProjection();
+            });
+            
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function onWindowResize() {
+            const view3D = document.getElementById('view3D');
+            
+            camera3D.aspect = view3D.clientWidth / view3D.clientHeight;
+            camera3D.updateProjectionMatrix();
+            renderer3D.setSize(view3D.clientWidth, view3D.clientHeight);
+            
+            update2DCamera();
+        }
+        
+        function update2DCamera() {
+            const view2D = document.getElementById('view2D');
+            const aspect = view2D.clientWidth / view2D.clientHeight;
+
+            camera2D.left = -zoomLevel2D * aspect / 2;
+            camera2D.right = zoomLevel2D * aspect / 2;
+            camera2D.top = zoomLevel2D / 2;
+            camera2D.bottom = -zoomLevel2D / 2;
+            camera2D.updateProjectionMatrix();
+            
+            renderer2D.setSize(view2D.clientWidth, view2D.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer3D.render(scene3D, camera3D);
+            renderer2D.render(scene2D, camera2D);
+        }
+
+        init();
+
+    </script>
+</body>
+</html>
