@@ -2,6 +2,10 @@
 
 An interactive web application that visualizes the principles of **perspective projection** by demonstrating how a 3D cube projects onto a 2D image plane. This educational tool helps users understand fundamental concepts in computer graphics, computer vision, and technical drawing.
 
+## 🌐 **[🚀 Live Demo](https://yiihuang.github.io/perspective_projection/interactive_projection.html)**
+
+**Try it now: https://yiihuang.github.io/perspective_projection/interactive_projection.html**
+
 ## 🎯 What This Application Demonstrates
 
 This visualization shows the mathematical relationship between 3D objects and their 2D projections, including:
