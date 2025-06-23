@@ -13,145 +13,433 @@
             color: #333;
         }
         #container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
             width: 100vw;
             height: 100vh;
-            gap: 2px;
-        }
-        .view {
             position: relative;
+        }
+        .window {
+            position: absolute;
             border: 1px solid #d1d5db;
             background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+            min-height: 150px;
+            resize: both;
+            overflow: hidden;
         }
-        #linear3D { 
+        .window-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 12px;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            border-radius: 7px 7px 0 0;
+        }
+        .window-title {
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .window-controls {
+            display: flex;
+            gap: 4px;
+        }
+        .window-button {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .window-button:hover {
+            opacity: 1;
+        }
+        .close-btn {
+            background: #ff5f56;
+            color: white;
+        }
+        .window-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Window positioning */
+        #linear3D-window { 
+            top: 20px;
+            left: 20px;
+            width: 48vw;
+            height: 45vh;
+        }
+        #linear2D-window { 
+            top: 20px;
+            right: 20px;
+            width: 48vw;
+            height: 45vh;
+        }
+        #hemi3D-window { 
+            bottom: 20px;
+            left: 20px;
+            width: 48vw;
+            height: 45vh;
+        }
+        #hemi2D-window { 
+            bottom: 20px;
+            right: 20px;
+            width: 48vw;
+            height: 45vh;
+        }
+        
+        .view-content { 
             background-color: #ffffff; 
             cursor: grab;
+            width: 100%;
+            height: 100%;
         }
-        #linear3D:active {
+        .view-content:active {
             cursor: grabbing;
         }
-        #linear2D { 
+        .view-2d { 
             background-color: #f9fafb; 
             cursor: ns-resize;
         }
-        #linear2D:active {
-            cursor: ns-resize;
-        }
-        #hemi3D { 
-            background-color: #ffffff; 
-            cursor: grab;
-        }
-        #hemi3D:active {
-            cursor: grabbing;
-        }
-        #hemi2D { 
-            background-color: #f9fafb; 
-            cursor: ns-resize;
-        }
-        #hemi2D:active {
+        .view-2d:active {
             cursor: ns-resize;
         }
         
         canvas { display: block; width: 100%; height: 100%; }
         
-        h2 {
-            position: absolute;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            margin: 0;
-            padding: 4px 8px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 6px;
-            font-size: 0.8em;
+        #controls-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        #window-menu-container {
+            position: fixed;
+            top: 20px;
+            right: 150px;
+            z-index: 100;
+        }
+        
+        #window-menu-toggle {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
             font-weight: 500;
-            text-align: center;
-            z-index: 10;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        #window-menu-toggle:hover {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        #window-menu-toggle::after {
+            content: '🪟';
+            font-size: 1.1em;
+        }
+        
+        #window-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 8px 0;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            border: 1px solid #e5e7eb;
+            backdrop-filter: blur(10px);
+            display: none;
+            min-width: 200px;
+        }
+        
+        #window-menu.show {
+            display: block;
+        }
+        
+        .window-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        
+        .window-menu-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .window-menu-item .checkmark {
+            width: 16px;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        #controls-toggle {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        #controls-toggle:hover {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        #controls-toggle::after {
+            content: '⚙️';
+            font-size: 1.1em;
         }
         
         #controls {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            border: 1px solid #e5e7eb;
+            backdrop-filter: blur(10px);
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 280px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        #controls.show {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            z-index: 100;
-            max-width: 90vw;
         }
         
         .slider-container {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 200px;
+            flex-direction: column;
+            gap: 6px;
         }
         
         .slider-container label {
-            font-size: 0.8em;
-            width: 80px;
-            flex-shrink: 0;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .slider-container input[type="range"] {
             flex: 1;
-            min-width: 100px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider-container input[type="number"] {
+            width: 60px;
+            padding: 4px 6px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.8em;
+            text-align: center;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        
+        .slider-container input[type="number"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <div id="container">
-        <div id="linear3D" class="view">
-            <h2>Linear: 3D Scene (L-Click: Cube, R-Click: Scene)</h2>
+        <div id="linear3D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Linear: 3D Scene (L-Click: Cube, R-Click: Scene)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('linear3D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="linear3D" class="view-content"></div>
+            </div>
         </div>
-        <div id="linear2D" class="view">
-            <h2>Linear: 2D Projection (Drag/Wheel to Zoom)</h2>
+        
+        <div id="linear2D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Linear: 2D Projection (Drag/Wheel to Zoom)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('linear2D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="linear2D" class="view-content view-2d"></div>
+            </div>
         </div>
-        <div id="hemi3D" class="view">
-            <h2>Hemispherical: 3D Scene (L-Click: Cube, R-Click: Scene)</h2>
+        
+        <div id="hemi3D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Hemispherical: 3D Scene (L-Click: Cube, R-Click: Scene)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('hemi3D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="hemi3D" class="view-content"></div>
+            </div>
         </div>
-        <div id="hemi2D" class="view">
-            <h2>Hemispherical: 2D Projection (Drag/Wheel to Zoom)</h2>
+        
+        <div id="hemi2D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Hemispherical: 2D Projection (Drag/Wheel to Zoom)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('hemi2D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="hemi2D" class="view-content view-2d"></div>
+            </div>
         </div>
     </div>
 
-    <div id="controls">
-        <div class="slider-container">
-            <label for="viewpointY">Viewpoint Y</label>
-            <input type="range" id="viewpointY" min="-10" max="10" value="2" step="0.1">
+    <div id="window-menu-container">
+        <button id="window-menu-toggle">Window</button>
+        <div id="window-menu">
+            <div class="window-menu-item" onclick="toggleWindow('linear3D-window')">
+                <span class="checkmark">✓</span>
+                <span>Linear 3D Scene</span>
+            </div>
+            <div class="window-menu-item" onclick="toggleWindow('linear2D-window')">
+                <span class="checkmark">✓</span>
+                <span>Linear 2D Projection</span>
+            </div>
+            <div class="window-menu-item" onclick="toggleWindow('hemi3D-window')">
+                <span class="checkmark">✓</span>
+                <span>Hemispherical 3D Scene</span>
+            </div>
+            <div class="window-menu-item" onclick="toggleWindow('hemi2D-window')">
+                <span class="checkmark">✓</span>
+                <span>Hemispherical 2D Projection</span>
+            </div>
         </div>
-        <div class="slider-container">
-            <label for="viewpointZ">Viewpoint Z</label>
-            <input type="range" id="viewpointZ" min="3" max="20" value="8" step="0.1">
-        </div>
+    </div>
 
-        <div class="slider-container">
-            <label for="hemisphereRadius">Radius R (Both)</label>
-            <input type="range" id="hemisphereRadius" min="1" max="15" value="6" step="0.1">
-        </div>
-        <div class="slider-container">
-            <label for="cubeRotX">Cube Rot X</label>
-            <input type="range" id="cubeRotX" min="-180" max="180" value="0" step="1">
-        </div>
-        <div class="slider-container">
-            <label for="cubeRotY">Cube Rot Y</label>
-            <input type="range" id="cubeRotY" min="-180" max="180" value="0" step="1">
-        </div>
-        <div class="slider-container">
-            <label for="cubeRotZ">Cube Rot Z</label>
-            <input type="range" id="cubeRotZ" min="-180" max="180" value="0" step="1">
-        </div>
-        <div class="slider-container">
-            <label for="zoom3D">3D Zoom</label>
-            <input type="range" id="zoom3D" min="10" max="40" value="16.5" step="0.1">
+    <div id="controls-container">
+        <button id="controls-toggle">Controls</button>
+        <div id="controls">
+            <div class="slider-container">
+                <label for="viewpointY">Viewpoint Y</label>
+                <div class="slider-row">
+                    <input type="range" id="viewpointY" min="-10" max="10" value="2" step="0.1">
+                    <input type="number" id="viewpointY-number" min="-10" max="10" value="2" step="0.1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="viewpointZ">Viewpoint Z</label>
+                <div class="slider-row">
+                    <input type="range" id="viewpointZ" min="3" max="20" value="8" step="0.1">
+                    <input type="number" id="viewpointZ-number" min="3" max="20" value="8" step="0.1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="hemisphereRadius">Radius R (Both)</label>
+                <div class="slider-row">
+                    <input type="range" id="hemisphereRadius" min="1" max="15" value="6" step="0.1">
+                    <input type="number" id="hemisphereRadius-number" min="1" max="15" value="6" step="0.1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="cubeRotX">Cube Rot X</label>
+                <div class="slider-row">
+                    <input type="range" id="cubeRotX" min="-180" max="180" value="0" step="1">
+                    <input type="number" id="cubeRotX-number" min="-180" max="180" value="0" step="1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="cubeRotY">Cube Rot Y</label>
+                <div class="slider-row">
+                    <input type="range" id="cubeRotY" min="-180" max="180" value="0" step="1">
+                    <input type="number" id="cubeRotY-number" min="-180" max="180" value="0" step="1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="cubeRotZ">Cube Rot Z</label>
+                <div class="slider-row">
+                    <input type="range" id="cubeRotZ" min="-180" max="180" value="0" step="1">
+                    <input type="number" id="cubeRotZ-number" min="-180" max="180" value="0" step="1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="zoom3D">3D Zoom</label>
+                <div class="slider-row">
+                    <input type="range" id="zoom3D" min="10" max="40" value="16.5" step="0.1">
+                    <input type="number" id="zoom3D-number" min="10" max="40" value="16.5" step="0.1">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -160,6 +448,23 @@
         let scenes = {}, cameras = {}, renderers = {};
         let cube, viewpointSphere, imagePlane, hemisphere;
         let hemisphereCenter = new THREE.Vector3();
+        
+        // Window management
+        let windowStates = {
+            'linear3D-window': true,
+            'linear2D-window': true,
+            'hemi3D-window': true,
+            'hemi2D-window': true
+        };
+        
+        let dragState = {
+            isDragging: false,
+            currentWindow: null,
+            startX: 0,
+            startY: 0,
+            startLeft: 0,
+            startTop: 0
+        };
         
         // Parameters
         const CUBE_SIZE = 4;
@@ -401,19 +706,203 @@
             }
         }
 
-        // Consolidated event listener setup
+        // Window management functions
+        function toggleWindow(windowId) {
+            const window = document.getElementById(windowId);
+            const isVisible = windowStates[windowId];
+            
+            if (isVisible) {
+                window.style.display = 'none';
+                windowStates[windowId] = false;
+            } else {
+                window.style.display = 'flex';
+                windowStates[windowId] = true;
+                
+                // Force renderer update when window becomes visible
+                const viewId = windowId.replace('-window', '');
+                
+                // Use multiple timeouts to ensure proper rendering
+                setTimeout(() => {
+                    if (renderers[viewId]) {
+                        const viewElement = document.getElementById(viewId);
+                        
+                        // Force a reflow to ensure dimensions are available
+                        viewElement.offsetHeight;
+                        
+                        // Update renderer size
+                        renderers[viewId].setSize(viewElement.clientWidth, viewElement.clientHeight);
+                        
+                        // Update camera
+                        if (cameras[viewId]) {
+                            if (cameras[viewId].isPerspectiveCamera) {
+                                cameras[viewId].aspect = viewElement.clientWidth / viewElement.clientHeight;
+                                cameras[viewId].updateProjectionMatrix();
+                            } else {
+                                update2DCameras();
+                            }
+                        }
+                        
+                        // Mark viewport as dirty and force immediate render
+                        viewportDirty[viewId] = true;
+                        needsUpdate.render = true;
+                        
+                        // Force immediate render
+                        renderers[viewId].render(scenes[viewId], cameras[viewId]);
+                        
+                        // Schedule additional updates to ensure everything is correct
+                        setTimeout(() => {
+                            viewportDirty[viewId] = true;
+                            needsUpdate.render = true;
+                            renderers[viewId].render(scenes[viewId], cameras[viewId]);
+                        }, 50);
+                    }
+                }, 10);
+                
+                // Additional delayed update to catch any missed cases
+                setTimeout(() => {
+                    if (renderers[viewId]) {
+                        const viewElement = document.getElementById(viewId);
+                        renderers[viewId].setSize(viewElement.clientWidth, viewElement.clientHeight);
+                        viewportDirty[viewId] = true;
+                        needsUpdate.render = true;
+                        renderers[viewId].render(scenes[viewId], cameras[viewId]);
+                    }
+                }, 200);
+            }
+            
+            updateWindowMenuCheckmarks();
+        }
+        
+        function updateWindowMenuCheckmarks() {
+            const menuItems = document.querySelectorAll('.window-menu-item');
+            const windowIds = ['linear3D-window', 'linear2D-window', 'hemi3D-window', 'hemi2D-window'];
+            
+            menuItems.forEach((item, index) => {
+                const checkmark = item.querySelector('.checkmark');
+                if (windowStates[windowIds[index]]) {
+                    checkmark.style.visibility = 'visible';
+                } else {
+                    checkmark.style.visibility = 'hidden';
+                }
+            });
+        }
+        
+        function initializeWindowDragging() {
+            const windows = document.querySelectorAll('.window');
+            
+            windows.forEach(window => {
+                const header = window.querySelector('.window-header');
+                
+                header.addEventListener('mousedown', (e) => {
+                    // Don't drag if clicking on window controls
+                    if (e.target.classList.contains('window-button')) return;
+                    
+                    dragState.isDragging = true;
+                    dragState.currentWindow = window;
+                    dragState.startX = e.clientX;
+                    dragState.startY = e.clientY;
+                    
+                    const rect = window.getBoundingClientRect();
+                    dragState.startLeft = rect.left;
+                    dragState.startTop = rect.top;
+                    
+                    // Bring window to front
+                    window.style.zIndex = '1000';
+                    
+                    e.preventDefault();
+                });
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!dragState.isDragging || !dragState.currentWindow) return;
+                
+                const deltaX = e.clientX - dragState.startX;
+                const deltaY = e.clientY - dragState.startY;
+                
+                const newLeft = dragState.startLeft + deltaX;
+                const newTop = dragState.startTop + deltaY;
+                
+                // Keep window within viewport bounds
+                const maxLeft = window.innerWidth - 200; // Min 200px visible width
+                const maxTop = window.innerHeight - 50;   // Min 50px visible height
+                
+                dragState.currentWindow.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
+                dragState.currentWindow.style.top = Math.max(0, Math.min(maxTop, newTop)) + 'px';
+                dragState.currentWindow.style.right = 'auto';
+                dragState.currentWindow.style.bottom = 'auto';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (dragState.currentWindow) {
+                    dragState.currentWindow.style.zIndex = '10';
+                }
+                dragState.isDragging = false;
+                dragState.currentWindow = null;
+            });
+        }
+
+        // Consolidated event listener setup with number input synchronization
         function setupSliderControl(elementId, updateCallback) {
-            document.getElementById(elementId).addEventListener('input', (e) => {
+            const slider = document.getElementById(elementId);
+            const numberInput = document.getElementById(elementId + '-number');
+            
+            // Slider changes update number input
+            slider.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
+                numberInput.value = value;
                 if (updateCallback) {
                     updateCallback(value, e);
                 }
                 scheduleUpdate();
             });
+            
+            // Number input changes update slider
+            numberInput.addEventListener('input', (e) => {
+                let value = parseFloat(e.target.value);
+                
+                // Validate and clamp value to slider's min/max
+                const min = parseFloat(slider.min);
+                const max = parseFloat(slider.max);
+                
+                if (isNaN(value)) {
+                    value = parseFloat(slider.value); // Reset to current slider value
+                    numberInput.value = value;
+                    return;
+                }
+                
+                value = Math.max(min, Math.min(max, value));
+                
+                // Update both inputs to the clamped value
+                slider.value = value;
+                numberInput.value = value;
+                
+                if (updateCallback) {
+                    updateCallback(value, e);
+                }
+                scheduleUpdate();
+            });
+            
+            // Handle number input blur to ensure valid values
+            numberInput.addEventListener('blur', (e) => {
+                let value = parseFloat(e.target.value);
+                const min = parseFloat(slider.min);
+                const max = parseFloat(slider.max);
+                
+                if (isNaN(value)) {
+                    value = parseFloat(slider.value);
+                }
+                
+                value = Math.max(min, Math.min(max, value));
+                numberInput.value = value;
+                slider.value = value;
+            });
         }
 
         function setupRotationControl(elementId, axis, rotationObj) {
-            document.getElementById(elementId).addEventListener('input', (e) => {
+            const slider = document.getElementById(elementId);
+            const numberInput = document.getElementById(elementId + '-number');
+            
+            function handleRotationChange(e) {
                 const newRotation = parseFloat(e.target.value);
                 const delta = newRotation - rotationObj[axis];
                 rotationObj[axis] = newRotation;
@@ -422,6 +911,49 @@
                 axisVector[axis] = 1;
                 cube.rotateOnAxis(axisVector, delta * Math.PI / 180);
                 scheduleUpdate();
+            }
+            
+            // Slider changes update number input and rotation
+            slider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                numberInput.value = value;
+                handleRotationChange(e);
+            });
+            
+            // Number input changes update slider and rotation
+            numberInput.addEventListener('input', (e) => {
+                let value = parseFloat(e.target.value);
+                
+                // Validate and clamp value
+                const min = parseFloat(slider.min);
+                const max = parseFloat(slider.max);
+                
+                if (isNaN(value)) {
+                    value = parseFloat(slider.value);
+                    numberInput.value = value;
+                    return;
+                }
+                
+                value = Math.max(min, Math.min(max, value));
+                slider.value = value;
+                numberInput.value = value;
+                
+                handleRotationChange(e);
+            });
+            
+            // Handle number input blur
+            numberInput.addEventListener('blur', (e) => {
+                let value = parseFloat(e.target.value);
+                const min = parseFloat(slider.min);
+                const max = parseFloat(slider.max);
+                
+                if (isNaN(value)) {
+                    value = parseFloat(slider.value);
+                }
+                
+                value = Math.max(min, Math.min(max, value));
+                numberInput.value = value;
+                slider.value = value;
             });
         }
 
@@ -429,6 +961,7 @@
             setupScenes();
             createSceneObjects();
             setupEventListeners();
+            initializeResizeObserver();
             animate();
         }
 
@@ -1020,6 +1553,13 @@
             // Add mouse event listeners to 3D view elements (for cube and scene rotation)
             const view3DElements = [document.getElementById('linear3D'), document.getElementById('hemi3D')];
             
+            // Prevent window dragging when interacting with 3D views
+            view3DElements.forEach(element => {
+                element.addEventListener('mousedown', (e) => {
+                    e.stopPropagation(); // Prevent window dragging
+                });
+            });
+            
             view3DElements.forEach(viewElement => {
                 viewElement.addEventListener('mousedown', (e) => {
                     // Prevent dragging if clicking on controls
@@ -1043,6 +1583,13 @@
 
             // Add mouse event listeners to 2D view elements (for zooming)
             const view2DElements = [document.getElementById('linear2D'), document.getElementById('hemi2D')];
+            
+            // Prevent window dragging when interacting with 2D views
+            view2DElements.forEach(element => {
+                element.addEventListener('mousedown', (e) => {
+                    e.stopPropagation(); // Prevent window dragging
+                });
+            });
             
             view2DElements.forEach(viewElement => {
                 viewElement.addEventListener('mousedown', (e) => {
@@ -1081,8 +1628,14 @@
                     cubeLocalRotation.y += deltaX * 0.005 * 180 / Math.PI;
                     cubeLocalRotation.x += deltaY * 0.005 * 180 / Math.PI;
                     
-                    document.getElementById('cubeRotX').value = Math.round(cubeLocalRotation.x);
-                    document.getElementById('cubeRotY').value = Math.round(cubeLocalRotation.y);
+                    // Update both slider and number input
+                    const rotXValue = Math.round(cubeLocalRotation.x);
+                    const rotYValue = Math.round(cubeLocalRotation.y);
+                    
+                    document.getElementById('cubeRotX').value = rotXValue;
+                    document.getElementById('cubeRotX-number').value = rotXValue;
+                    document.getElementById('cubeRotY').value = rotYValue;
+                    document.getElementById('cubeRotY-number').value = rotYValue;
                     
                     scheduleUpdate('all', true); // Immediate update for mouse interaction
                     
@@ -1139,6 +1692,72 @@
             // Prevent drag interaction when using controls
             document.getElementById('controls').addEventListener('mousedown', (e) => {
                 e.stopPropagation(); // Prevent event from bubbling up
+            });
+            
+            // Handle controls dropdown toggle
+            const controlsToggle = document.getElementById('controls-toggle');
+            const controlsPanel = document.getElementById('controls');
+            
+            controlsToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                controlsPanel.classList.toggle('show');
+            });
+            
+            // Close controls when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#controls-container')) {
+                    controlsPanel.classList.remove('show');
+                }
+            });
+            
+            // Prevent controls from closing when clicking inside the panel
+            controlsPanel.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            // Handle window menu dropdown toggle
+            const windowMenuToggle = document.getElementById('window-menu-toggle');
+            const windowMenu = document.getElementById('window-menu');
+            
+            windowMenuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                windowMenu.classList.toggle('show');
+            });
+            
+            // Close window menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#window-menu-container')) {
+                    windowMenu.classList.remove('show');
+                }
+            });
+            
+            // Prevent window menu from closing when clicking inside
+            windowMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            // Initialize window dragging
+            initializeWindowDragging();
+            
+            // Handle page visibility changes to fix rendering issues
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    // Page became visible, force re-render all visible windows
+                    setTimeout(() => {
+                        Object.keys(renderers).forEach(id => {
+                            const windowId = id + '-window';
+                            if (windowStates[windowId]) {
+                                const viewElement = document.getElementById(id);
+                                if (viewElement && renderers[id] && cameras[id]) {
+                                    renderers[id].setSize(viewElement.clientWidth, viewElement.clientHeight);
+                                    viewportDirty[id] = true;
+                                    needsUpdate.render = true;
+                                    renderers[id].render(scenes[id], cameras[id]);
+                                }
+                            }
+                        });
+                    }, 100);
+                }
             });
 
             // Slider controls (fixed setup)
@@ -1215,6 +1834,49 @@
                 
                 renderer.setSize(viewElement.clientWidth, viewElement.clientHeight);
             });
+        }
+        
+        function initializeResizeObserver() {
+            if (window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(entries => {
+                    entries.forEach(entry => {
+                        const element = entry.target;
+                        const id = element.id;
+                        
+                        // Skip if element has no dimensions (likely hidden)
+                        if (element.clientWidth === 0 || element.clientHeight === 0) {
+                            return;
+                        }
+                        
+                        if (renderers[id]) {
+                            const camera = cameras[id];
+                            const renderer = renderers[id];
+                            
+                            if (camera.isPerspectiveCamera) {
+                                camera.aspect = element.clientWidth / element.clientHeight;
+                                camera.updateProjectionMatrix();
+                            } else {
+                                update2DCameras();
+                            }
+                            
+                            renderer.setSize(element.clientWidth, element.clientHeight);
+                            
+                            // Force immediate render after resize
+                            viewportDirty[id] = true;
+                            needsUpdate.render = true;
+                            renderer.render(scenes[id], camera);
+                        }
+                    });
+                });
+                
+                // Observe all view elements
+                ['linear3D', 'linear2D', 'hemi3D', 'hemi2D'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        resizeObserver.observe(element);
+                    }
+                });
+            }
         }
 
         function animate() {
