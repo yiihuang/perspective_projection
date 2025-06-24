@@ -153,6 +153,18 @@ export class Renderer {
         this.frameCount++;
         this.renderStats.totalFrames++;
         
+        // Update projections if needed
+        if (this.projectionManager.shouldUpdate()) {
+            this.projectionManager.updateProjections(
+                this.scenes, 
+                state.groups, 
+                window.sceneObjects?.cube, 
+                window.sceneObjects?.viewpointSphere, 
+                window.sceneObjects?.imagePlane, 
+                window.sceneObjects?.hemisphere
+            );
+        }
+        
         // Selective rendering: only render viewports that are dirty
         let rendered = false;
         const renderStartTime = performance.now();

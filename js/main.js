@@ -39,7 +39,10 @@ export function init() {
         // Start the renderer
         renderer.start();
         
-        // Initial projection update
+        // Initial projection update - force it to happen
+        projectionManager.scheduleUpdate('all', true); // Force immediate update
+        
+        // Also call directly to ensure it happens
         projectionManager.updateProjections(
             state.scenes, 
             state.groups, 

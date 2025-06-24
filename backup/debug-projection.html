@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projection Debug</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; padding: 20px; }
+        #debug-output { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; white-space: pre-wrap; font-family: monospace; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .test-section h3 { margin-top: 0; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>Projection System Debug</h1>
+    
+    <div class="test-section">
+        <h3>Module Loading Test</h3>
+        <div id="module-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>State and Configuration</h3>
+        <div id="state-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Scene Objects</h3>
+        <div id="objects-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Projection Functions Test</h3>
+        <div id="projection-status"></div>
+        <button onclick="testProjections()">Test Projections Manually</button>
+    </div>
+    
+    <!-- Hidden DOM elements for testing -->
+    <div style="display: none;">
+        <div id="linear3D" style="width: 400px; height: 300px;"></div>
+        <div id="linear2D" style="width: 400px; height: 300px;"></div>
+        <div id="hemi3D" style="width: 400px; height: 300px;"></div>
+        <div id="hemi2D" style="width: 400px; height: 300px;"></div>
+    </div>
+    
+    <div id="debug-output"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module">
+        import { config } from './js/config.js';
+        import { state } from './js/state.js';
+        import { setupScenes } from './js/scenes/scene-manager.js';
+        import { createSceneObjects } from './js/scenes/objects.js';
+        import { updateLinearProjection } from './js/projections/linear-projection.js';
+        import { updateHemisphericalProjection } from './js/projections/hemispherical-projection.js';
+
+        const debugOutput = document.getElementById('debug-output');
+        const moduleStatus = document.getElementById('module-status');
+        const stateStatus = document.getElementById('state-status');
+        const objectsStatus = document.getElementById('objects-status');
+        const projectionStatus = document.getElementById('projection-status');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            debugOutput.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            console.log(message);
+        }
+
+        function updateStatus(element, message, isSuccess) {
+            element.innerHTML = `<span class="${isSuccess ? 'success' : 'error'}">${message}</span>`;
+        }
+
+        try {
+            // Test module loading
+            updateStatus(moduleStatus, '✅ All modules loaded successfully', true);
+            log('Modules loaded successfully', 'success');
+
+            // Test configuration
+            log(`Config loaded: CUBE_SIZE=${config.CUBE_SIZE}, Colors defined=${!!config.COLORS}`, 'success');
+            updateStatus(stateStatus, `✅ Config: CUBE_SIZE=${config.CUBE_SIZE}, viewpoint=(${state.viewpointPosition.x}, ${state.viewpointPosition.y}, ${state.viewpointPosition.z})`, true);
+
+            // Initialize scenes
+            log('Initializing scenes...', 'info');
+            setupScenes();
+            log(`Scenes created: ${Object.keys(state.scenes).join(', ')}`, 'success');
+
+            // Create objects
+            log('Creating scene objects...', 'info');
+            const sceneObjects = createSceneObjects();
+            window.sceneObjects = sceneObjects;
+            log(`Objects created: ${Object.keys(sceneObjects).join(', ')}`, 'success');
+            updateStatus(objectsStatus, `✅ Objects: ${Object.keys(sceneObjects).join(', ')}`, true);
+
+            // Test groups
+            log('Checking groups...', 'info');
+            Object.keys(state.groups).forEach(sceneId => {
+                const groups = state.groups[sceneId];
+                log(`  ${sceneId}: ${Object.keys(groups).join(', ')}`, 'info');
+            });
+
+            // Test projection functions
+            window.testProjections = function() {
+                log('Testing projections manually...', 'info');
+                try {
+                    log('Calling updateLinearProjection...', 'info');
+                    updateLinearProjection(state.scenes, state.groups, sceneObjects.cube, sceneObjects.viewpointSphere, sceneObjects.imagePlane);
+                    log('✅ Linear projection completed', 'success');
+
+                    log('Calling updateHemisphericalProjection...', 'info');
+                    updateHemisphericalProjection(state.scenes, state.groups, sceneObjects.cube, sceneObjects.viewpointSphere, sceneObjects.hemisphere);
+                    log('✅ Hemispherical projection completed', 'success');
+
+                    // Check what was added to 2D scenes
+                    ['linear2D', 'hemi2D'].forEach(sceneId => {
+                        const scene = state.scenes[sceneId];
+                        const groups = state.groups[sceneId];
+                        log(`${sceneId} scene children: ${scene.children.length}`, 'info');
+                        Object.keys(groups).forEach(groupName => {
+                            const group = groups[groupName];
+                            log(`  ${groupName}: ${group.children.length} objects`, 'info');
+                        });
+                    });
+
+                    updateStatus(projectionStatus, '✅ Projections executed successfully', true);
+                } catch (error) {
+                    log(`❌ Projection error: ${error.message}`, 'error');
+                    log(`Stack: ${error.stack}`, 'error');
+                    updateStatus(projectionStatus, `❌ Error: ${error.message}`, false);
+                }
+            };
+
+            updateStatus(projectionStatus, '⚠️ Ready to test projections manually', true);
+
+        } catch (error) {
+            log(`❌ Initialization error: ${error.message}`, 'error');
+            log(`Stack: ${error.stack}`, 'error');
+            updateStatus(moduleStatus, `❌ Error: ${error.message}`, false);
+        }
+    </script>
+</body>
+</html> 

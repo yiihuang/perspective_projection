@@ -1,16 +1,26 @@
 # Interactive 3D Perspective Projection Suite
 
-An interactive web application suite that visualizes the principles of **perspective projection** by demonstrating how a 3D cube projects onto different 2D surfaces. This educational tool helps users understand fundamental concepts in computer graphics, computer vision, and technical drawing by comparing **linear perspective** (planar projection) with **hemispherical perspective** (spherical projection).
+An interactive web application that visualizes the principles of **perspective projection** by demonstrating how a 3D cube projects onto different 2D surfaces. This educational tool helps users understand fundamental concepts in computer graphics, computer vision, and technical drawing by comparing **linear perspective** (planar projection) with **hemispherical perspective** (spherical projection).
 
-## 🌐 **Live Demos**
+## 🚀 Quick Start
 
-- **[🚀 Combined Application](https://yiihuang.github.io/perspective_projection/combined_perspective.html)** - Side-by-side comparison of both projection types
-- **[📐 Linear Perspective](https://yiihuang.github.io/perspective_projection/linear_projection.html)** - Traditional planar projection
-- **[🌍 Hemispherical Perspective](https://yiihuang.github.io/perspective_projection/hemispherical_projection.html)** - Spherical projection with Postel mapping
+### Run the Application
+```bash
+# Start local server (required for ES6 modules)
+python3 -m http.server 8000
 
-## 🎯 What This Application Suite Demonstrates
+# Open in browser
+http://localhost:8000/index.html
+```
 
-This visualization suite shows the mathematical relationships between 3D objects and their 2D projections across different projection surfaces:
+### Alternative: Node.js Server
+```bash
+npx http-server -p 8000
+```
+
+## 🎯 What This Application Demonstrates
+
+This visualization shows the mathematical relationships between 3D objects and their 2D projections across different projection surfaces:
 
 ### Linear Perspective
 - **Planar Projection**: Traditional perspective onto a flat image plane
@@ -29,36 +39,70 @@ This visualization suite shows the mathematical relationships between 3D objects
 - **Synchronized Viewpoint**: Same viewpoint position across both perspectives
 - **Dynamic Scaling**: Image plane size (2R × 2R) matches hemisphere diameter
 
-## 🚀 How to Run
+## 🏗️ Modern Architecture
 
-### Option 1: Direct Browser Opening
-```bash
-# Combined application (recommended)
-open combined_perspective.html
+This application features a **professional modular architecture** with:
 
-# Individual applications
-open linear_projection.html
-open hemispherical_projection.html
+### ES6 Module System
+```
+index.html (156 lines) - Clean entry point
+├── css/
+│   ├── main.css - Core styling
+│   ├── windows.css - Window system styling  
+│   └── controls.css - UI controls styling
+├── js/
+│   ├── main.js - Application entry point
+│   ├── config.js - Configuration constants
+│   ├── state.js - Centralized state management
+│   ├── scenes/
+│   │   ├── scene-manager.js - Three.js scene setup
+│   │   └── objects.js - 3D object creation
+│   ├── projections/
+│   │   ├── linear-projection.js - Linear perspective math
+│   │   ├── hemispherical-projection.js - Spherical projection math
+│   │   └── projection-manager.js - Projection coordination
+│   ├── ui/
+│   │   ├── window-manager.js - Flexible window system
+│   │   └── controls.js - Slider/input controls
+│   ├── events/
+│   │   └── mouse-handlers.js - Mouse interaction logic
+│   ├── rendering/
+│   │   └── renderer.js - Animation loop & performance
+│   └── utils/
+│       └── three-utils.js - Three.js helper functions
 ```
 
-### Option 2: Local HTTP Server (Recommended)
-```bash
-python3 -m http.server 8000
-```
-Then navigate to:
-- Combined: `http://localhost:8000/combined_perspective.html`
-- Linear: `http://localhost:8000/linear_projection.html`
-- Hemispherical: `http://localhost:8000/hemispherical_projection.html`
+### Key Improvements
+- **92% reduction** in HTML complexity (1943 → 156 lines)
+- **Professional ES6 module system** with clean separation of concerns
+- **Flexible window management** - drag, resize, show/hide windows
+- **Enhanced UI controls** - sliders with numerical inputs
+- **Comprehensive error handling** and debugging support
+- **Performance optimizations** - smart caching and selective rendering
 
-## 🎮 Interactive Controls
+## 🎮 Interactive Features
+
+### Window Management
+- **Flexible Layout**: Drag windows anywhere on screen
+- **Window Menu**: Toggle window visibility with checkmarks
+- **Resizable Windows**: Adjust window sizes as needed
+- **Professional UI**: Modern styling with gradients and shadows
+
+### Enhanced Controls
+- **Dropdown Controls**: Click "Controls ⚙️" to reveal/hide control panel
+- **Dual Input Methods**: 
+  - Sliders for visual adjustment
+  - Number inputs for precise values
+- **Bidirectional Sync**: Sliders and inputs update each other
+- **Value Validation**: Automatic clamping to valid ranges
 
 ### Mouse Controls (Context-Sensitive)
 - **Left-drag in 3D views**: Rotate the cube around its local axes
 - **Right-drag in 3D views**: Rotate the camera around the scene
 - **Drag/Wheel in 2D views**: Zoom in/out on the 2D projections
-- **Slider areas**: Protected from drag interactions
+- **Window dragging**: Drag windows by their title bars
 
-### Slider Controls
+### Control Parameters
 - **Viewpoint Y**: Adjust the vertical position of the viewpoint (-10 to +10)
 - **Viewpoint Z**: Move the viewpoint closer/farther from the scene (3 to 20)
 - **Radius R (Both)**: Controls hemisphere radius and image plane distance (1 to 15)
@@ -67,10 +111,11 @@ Then navigate to:
 
 ## 📊 Visual Elements
 
-### Combined Application (2×2 Grid)
-- **Top Row**: Linear perspective (3D scene + 2D projection)
-- **Bottom Row**: Hemispherical perspective (3D scene + 2D projection)
-- **Synchronized Parameters**: All views update simultaneously
+### Four-Window Layout
+- **Linear 3D Scene**: 3D visualization with traditional perspective
+- **Linear 2D Projection**: Flat projection with straight lines
+- **Hemispherical 3D Scene**: 3D visualization with spherical perspective
+- **Hemispherical 2D Projection**: Curved projection with circular arcs
 
 ### 3D Scenes
 - **Blue Cube**: The 3D object being projected (semi-transparent with visible edges)
@@ -130,27 +175,42 @@ For hemispherical perspective, straight lines become circular arcs determined by
 ### Technologies Used
 - **Three.js**: 3D graphics rendering and scene management
 - **HTML5 Canvas**: 2D rendering context
-- **Vanilla JavaScript**: Interactive controls and mathematical calculations
-- **CSS Grid**: 2×2 layout for combined application
+- **ES6 Modules**: Modern JavaScript architecture
+- **CSS Grid & Flexbox**: Responsive layout system
 - **WebGL**: Hardware-accelerated 3D rendering
 
-### Key Features
-- **Real-time Synchronization**: All views update simultaneously
-- **Context-Sensitive Interaction**: Different mouse behaviors per window type
-- **Mathematical Accuracy**: Precise projection calculations for both methods
-- **Dynamic Geometry**: Surfaces resize/reposition based on parameters
-- **Memory Management**: Proper disposal of geometries during updates
-- **Responsive Design**: Adapts to different screen sizes
+### Performance Features
+- **Smart Caching**: Cached vertex calculations and materials
+- **Selective Rendering**: Only render dirty viewports
+- **Frame Rate Management**: Adaptive FPS based on activity
+- **Memory Management**: Proper disposal of Three.js objects
+- **Error Boundaries**: Comprehensive error handling
 
-### Advanced Interactions
-- **Dual 3D Interactions**: Left-click (cube rotation) + Right-click (scene rotation)
-- **Protected Controls**: Slider interactions don't trigger rotations
-- **Visual Feedback**: Cursor changes indicate interaction types
-- **Zoom Controls**: Mouse wheel and drag support for 2D views
+### Development Features
+- **Module Hot Loading**: Easy development iteration
+- **Debug Infrastructure**: Built-in debugging tools
+- **Test Framework**: Module validation system
+- **Clear Error Reporting**: Detailed error messages and stack traces
+
+## 🧪 Testing & Debugging
+
+### Testing Tools
+- **Module Validator**: `test-modules.html` - Validates all ES6 imports
+- **Browser Console**: Press F12 for detailed debugging
+- **Performance Monitor**: Built-in FPS tracking
+
+### Quick Test Checklist
+1. **Load Test**: All 4 windows should appear with 3D graphics
+2. **Controls Test**: Sliders and number inputs should sync
+3. **Window Test**: Drag windows, toggle visibility
+4. **Interaction Test**: Left-click cube, right-click camera
+5. **Performance Test**: Smooth 60fps animation
+
+For detailed testing instructions, see [TESTING_GUIDE.md](TESTING_GUIDE.md).
 
 ## 📚 Educational Applications
 
-This tool suite is valuable for:
+This tool is valuable for:
 
 ### Computer Graphics Courses
 - **Projection Types**: Comparing planar vs spherical projections
@@ -175,15 +235,14 @@ This tool suite is valuable for:
 ## 🔧 Customization
 
 ### Modifying Parameters
-Key parameters can be adjusted in the JavaScript code:
-- `CUBE_SIZE`: Size of the 3D cube (default: 4)
-- `hemisphereRadius`: Initial hemisphere radius (default: 6)
-- Slider ranges and step sizes
-- Colors and visual styling
-- Arc segment count for smoothness
+Key parameters can be adjusted in `js/config.js`:
+- **CUBE_SIZE**: Size of the 3D cube
+- **Color schemes**: Projection lines, vanishing points, etc.
+- **Performance settings**: FPS limits, cache sizes
+- **UI settings**: Window positions, control ranges
 
 ### Adding Features
-The modular code structure allows for easy extensions:
+The modular architecture allows for easy extensions:
 - Additional 3D objects (spheres, pyramids, etc.)
 - Different projection types (orthographic, cylindrical, etc.)
 - Export functionality for projections
@@ -195,8 +254,14 @@ The modular code structure allows for easy extensions:
 
 - **Modern Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
 - **WebGL Support**: Required for Three.js rendering
-- **ES6 Features**: Uses modern JavaScript syntax
+- **ES6 Module Support**: Required for the modular architecture
 - **Performance**: Optimized for 60fps real-time interaction
+
+## 📖 Documentation
+
+- **[MODULARIZATION_REPORT.md](MODULARIZATION_REPORT.md)**: Detailed technical report on the modular architecture
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)**: Comprehensive testing instructions
+- **[backup/README.md](backup/README.md)**: Information about archived legacy files
 
 ## 📖 Further Reading
 
@@ -207,13 +272,8 @@ The modular code structure allows for easy extensions:
 
 ### Technical Documentation
 - [Three.js Documentation](https://threejs.org/docs/)
-- [Computer Graphics: Principles and Practice](https://www.amazon.com/Computer-Graphics-Principles-Practice-3rd/dp/0321399528)
-- [Multiple View Geometry](https://www.robots.ox.ac.uk/~vgg/hzbook/)
-
-### Mathematical Background
-- [Projective Geometry](https://en.wikipedia.org/wiki/Projective_geometry)
-- [Spherical Trigonometry](https://en.wikipedia.org/wiki/Spherical_trigonometry)
-- [Coordinate System Transformations](https://en.wikipedia.org/wiki/Transformation_matrix)
+- [ES6 Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+- [WebGL Fundamentals](https://webglfundamentals.org/)
 
 ## 📄 License
 
@@ -221,4 +281,4 @@ This project is open source and available under the MIT License.
 
 ---
 
-*Created for educational purposes to demonstrate fundamental concepts in 3D computer graphics, perspective projection, and spherical geometry. The suite provides comprehensive tools for understanding how different projection methods affect the visualization of 3D objects in 2D space.* 
+*A modern, modular educational tool for understanding 3D perspective projection mathematics through interactive visualization. Features professional ES6 architecture with comprehensive testing and debugging support.* 

@@ -59,6 +59,9 @@ export class ProjectionManager {
             // Only 3D viewports need update for camera changes
             state.viewportDirty.linear3D = true;
             state.viewportDirty.hemi3D = true;
+            // Camera changes also need projection updates if viewpoint changed
+            this.needsUpdate.linear = true;
+            this.needsUpdate.hemi = true;
         } else if (updateType === 'zoom2D') {
             // Only 2D viewports need update for zoom changes
             state.viewportDirty.linear2D = true;

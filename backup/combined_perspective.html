@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined Linear and Hemispherical Perspective</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/windows.css">
+    <link rel="stylesheet" href="css/controls.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="linear3D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Linear: 3D Scene (L-Click: Cube, R-Click: Scene)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('linear3D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="linear3D" class="view-content"></div>
+            </div>
+        </div>
+        
+        <div id="linear2D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Linear: 2D Projection (Drag/Wheel to Zoom)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('linear2D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="linear2D" class="view-content view-2d"></div>
+            </div>
+        </div>
+        
+        <div id="hemi3D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Hemispherical: 3D Scene (L-Click: Cube, R-Click: Scene)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('hemi3D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="hemi3D" class="view-content"></div>
+            </div>
+        </div>
+        
+        <div id="hemi2D-window" class="window">
+            <div class="window-header">
+                <div class="window-title">Hemispherical: 2D Projection (Drag/Wheel to Zoom)</div>
+                <div class="window-controls">
+                    <button class="window-button close-btn" onclick="toggleWindow('hemi2D-window')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div id="hemi2D" class="view-content view-2d"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="window-menu-container">
+        <button id="window-menu-toggle">Window</button>
+        <div id="window-menu">
+            <div class="window-menu-item" onclick="toggleWindow('linear3D-window')">
+                <span class="checkmark">✓</span>
+                <span>Linear 3D Scene</span>
+            </div>
+            <div class="window-menu-item" onclick="toggleWindow('linear2D-window')">
+                <span class="checkmark">✓</span>
+                <span>Linear 2D Projection</span>
+            </div>
+            <div class="window-menu-item" onclick="toggleWindow('hemi3D-window')">
+                <span class="checkmark">✓</span>
+                <span>Hemispherical 3D Scene</span>
+            </div>
+            <div class="window-menu-item" onclick="toggleWindow('hemi2D-window')">
+                <span class="checkmark">✓</span>
+                <span>Hemispherical 2D Projection</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="controls-container">
+        <button id="controls-toggle">Controls</button>
+        <div id="controls">
+            <div class="slider-container">
+                <label for="viewpointY">Viewpoint Y</label>
+                <div class="slider-row">
+                    <input type="range" id="viewpointY" min="-10" max="10" value="2" step="0.1">
+                    <input type="number" id="viewpointY-number" min="-10" max="10" value="2" step="0.1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="viewpointZ">Viewpoint Z</label>
+                <div class="slider-row">
+                    <input type="range" id="viewpointZ" min="3" max="20" value="8" step="0.1">
+                    <input type="number" id="viewpointZ-number" min="3" max="20" value="8" step="0.1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="hemisphereRadius">Radius R (Both)</label>
+                <div class="slider-row">
+                    <input type="range" id="hemisphereRadius" min="1" max="15" value="6" step="0.1">
+                    <input type="number" id="hemisphereRadius-number" min="1" max="15" value="6" step="0.1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="cubeRotX">Cube Rot X</label>
+                <div class="slider-row">
+                    <input type="range" id="cubeRotX" min="-180" max="180" value="0" step="1">
+                    <input type="number" id="cubeRotX-number" min="-180" max="180" value="0" step="1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="cubeRotY">Cube Rot Y</label>
+                <div class="slider-row">
+                    <input type="range" id="cubeRotY" min="-180" max="180" value="0" step="1">
+                    <input type="number" id="cubeRotY-number" min="-180" max="180" value="0" step="1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="cubeRotZ">Cube Rot Z</label>
+                <div class="slider-row">
+                    <input type="range" id="cubeRotZ" min="-180" max="180" value="0" step="1">
+                    <input type="number" id="cubeRotZ-number" min="-180" max="180" value="0" step="1">
+                </div>
+            </div>
+            <div class="slider-container">
+                <label for="zoom3D">3D Zoom</label>
+                <div class="slider-row">
+                    <input type="range" id="zoom3D" min="10" max="40" value="16.5" step="0.1">
+                    <input type="number" id="zoom3D-number" min="10" max="40" value="16.5" step="0.1">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global function for HTML onclick handlers
+        function toggleWindow(windowId) {
+            if (window.windowManager) {
+                window.windowManager.toggleWindow(windowId);
+            } else {
+                console.warn('Window manager not yet initialized');
+            }
+        }
+        
+        // Export toggleWindow globally for HTML onclick handlers
+        window.toggleWindow = toggleWindow;
+    </script>
+</body>
+</html>

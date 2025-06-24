@@ -96,21 +96,33 @@ export class MouseHandlers {
             const deltaX = e.clientX - this.dragState.previousMousePosition.x;
             const deltaY = e.clientY - this.dragState.previousMousePosition.y;
 
-            // Get the cube from the scene manager
+            // Update cube rotation in state first
+            state.cubeLocalRotation.y += deltaX * 0.005 * 180 / Math.PI;
+            state.cubeLocalRotation.x += deltaY * 0.005 * 180 / Math.PI;
+            
+            // Apply rotation to cube instances in both 3D scenes directly
+            ['linear3D', 'hemi3D'].forEach(sceneId => {
+                const sceneObject = state.scenes[sceneId].children.find(child => 
+                    child.geometry && child.geometry.type === 'BoxGeometry'
+                );
+                if (sceneObject) {
+                    sceneObject.rotateOnAxis(new THREE.Vector3(0, 1, 0), deltaX * 0.005);
+                    sceneObject.rotateOnAxis(new THREE.Vector3(1, 0, 0), deltaY * 0.005);
+                }
+            });
+            
+            // Also update the master cube object if it exists
             const cube = window.sceneObjects?.cube;
             if (cube) {
                 cube.rotateOnAxis(new THREE.Vector3(0, 1, 0), deltaX * 0.005);
                 cube.rotateOnAxis(new THREE.Vector3(1, 0, 0), deltaY * 0.005);
-                
-                state.cubeLocalRotation.y += deltaX * 0.005 * 180 / Math.PI;
-                state.cubeLocalRotation.x += deltaY * 0.005 * 180 / Math.PI;
-                
-                // Update both slider and number input
-                this.updateRotationControls('cubeRotX', Math.round(state.cubeLocalRotation.x));
-                this.updateRotationControls('cubeRotY', Math.round(state.cubeLocalRotation.y));
-                
-                this.projectionManager.scheduleUpdate('all', true); // Immediate update for mouse interaction
             }
+            
+            // Update both slider and number input
+            this.updateRotationControls('cubeRotX', Math.round(state.cubeLocalRotation.x));
+            this.updateRotationControls('cubeRotY', Math.round(state.cubeLocalRotation.y));
+            
+            this.projectionManager.scheduleUpdate('all', true); // Immediate update for mouse interaction
             
             this.dragState.previousMousePosition.x = e.clientX;
             this.dragState.previousMousePosition.y = e.clientY;

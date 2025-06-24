@@ -1,5 +1,5 @@
 // Scene Management System
-import { CONFIG } from '../config.js';
+import { config } from '../config.js';
 import { state, getImagePlaneZ } from '../state.js';
 
 export function setupScenes() {

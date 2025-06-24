@@ -34,25 +34,25 @@ export function findObjectByGeometryType(scene, geometryType) {
 
 export function createMaterial(type, options = {}) {
     const defaults = {
-        LineBasicMaterial: { color: config.COLORS.projectionLine, linewidth: 2 },
+        LineBasicMaterial: { color: config.COLORS.cubeEdge, linewidth: 2 },
         MeshBasicMaterial: { color: config.COLORS.viewpoint },
         ProjectionLineMaterial: { color: config.COLORS.projectionLine, transparent: true, opacity: 0.5 },
         VanishingPointMaterial: { color: config.COLORS.vanishingPoints.x },
         GuideMaterial: { color: config.COLORS.guideLines.x, opacity: 0.4, transparent: true, linewidth: 1 }
     };
     
-    const config = { ...defaults[type], ...options };
+    const materialConfig = { ...defaults[type], ...options };
     
     switch (type) {
         case 'LineBasicMaterial':
         case 'ProjectionLineMaterial':
         case 'GuideMaterial':
-            return new THREE.LineBasicMaterial(config);
+            return new THREE.LineBasicMaterial(materialConfig);
         case 'MeshBasicMaterial':
         case 'VanishingPointMaterial':
-            return new THREE.MeshBasicMaterial(config);
+            return new THREE.MeshBasicMaterial(materialConfig);
         default:
-            return new THREE.MeshBasicMaterial(config);
+            return new THREE.MeshBasicMaterial(materialConfig);
     }
 }
 

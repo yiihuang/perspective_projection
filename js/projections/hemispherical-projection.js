@@ -93,7 +93,7 @@ export function createCircularArc(p1, p2, p3, material) {
 export function createHemi2DBoundary(scene, hemisphereRadius) {
     const boundaryRadius = (Math.PI / 2) * hemisphereRadius;
     const circleGeometry = new THREE.RingGeometry(boundaryRadius - 0.05, boundaryRadius, 64);
-    const circleMaterial = new THREE.MeshBasicMaterial({ color: config.colors.boundary, side: THREE.DoubleSide });
+    const circleMaterial = new THREE.MeshBasicMaterial({ color: config.COLORS.boundary, side: THREE.DoubleSide });
     const hemiBoundary = new THREE.Mesh(circleGeometry, circleMaterial);
     scene.add(hemiBoundary);
     return hemiBoundary;
@@ -158,9 +158,9 @@ export function updateHemisphericalProjection(scenes, groups, cube, viewpointSph
     const dirZ = new THREE.Vector3().subVectors(worldVertices[4], worldVertices[0]);
 
     const vanishingPointData = [
-        { dir: dirX.normalize(), color: config.colors.vanishingPoint.red },
-        { dir: dirY.normalize(), color: config.colors.vanishingPoint.green },
-        { dir: dirZ.normalize(), color: config.colors.vanishingPoint.blue }
+        { dir: dirX.normalize(), color: config.COLORS.vanishingPoint.red },
+        { dir: dirY.normalize(), color: config.COLORS.vanishingPoint.green },
+        { dir: dirZ.normalize(), color: config.COLORS.vanishingPoint.blue }
     ];
 
     const vanishingPoints = [];
@@ -221,13 +221,13 @@ export function updateHemisphericalProjection(scenes, groups, cube, viewpointSph
     }
 
     function getLighterColor(axisIndex) {
-        const colors = [config.colors.guide.red, config.colors.guide.green, config.colors.guide.blue];
+        const colors = [config.COLORS.guide.red, config.COLORS.guide.green, config.COLORS.guide.blue];
         return colors[axisIndex];
     }
 
     // Draw projected cube edges as circular arcs
     const edges = [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ];
-    const projectedLineMaterial = new THREE.LineBasicMaterial({ color: config.colors.cubeEdge, linewidth: 2 });
+    const projectedLineMaterial = new THREE.LineBasicMaterial({ color: config.COLORS.cubeEdge, linewidth: 2 });
     
     for (let i = 0; i < edges.length; i += 2) {
         const v1Index = edges[i];

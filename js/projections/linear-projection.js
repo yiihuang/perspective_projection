@@ -21,7 +21,7 @@ export function createLinear2DBoundary(scene) {
         new THREE.Vector3(-halfSize, halfSize, 0)
     ];
     const planeBoundaryGeom = new THREE.BufferGeometry().setFromPoints(planeBoundaryPoints);
-    const planeBoundaryMat = new THREE.LineBasicMaterial({ color: config.colors.boundary });
+    const planeBoundaryMat = new THREE.LineBasicMaterial({ color: config.COLORS.boundary });
     const linearBoundary = new THREE.LineLoop(planeBoundaryGeom, planeBoundaryMat);
     scene.add(linearBoundary);
     return linearBoundary;
@@ -116,9 +116,9 @@ export function updateLinearProjection(scenes, groups, cube, viewpointSphere, im
     const dirZ = new THREE.Vector3().subVectors(worldVertices[4], worldVertices[0]);
 
     const vanishingPoints = [
-        { dir: dirX, color: config.colors.vanishingPoint.red, lightColor: config.colors.guide.red }, 
-        { dir: dirY, color: config.colors.vanishingPoint.green, lightColor: config.colors.guide.green }, 
-        { dir: dirZ, color: config.colors.vanishingPoint.blue, lightColor: config.colors.guide.blue }  
+        { dir: dirX, color: config.COLORS.vanishingPoint.red, lightColor: config.COLORS.guide.red }, 
+        { dir: dirY, color: config.COLORS.vanishingPoint.green, lightColor: config.COLORS.guide.green }, 
+        { dir: dirZ, color: config.COLORS.vanishingPoint.blue, lightColor: config.COLORS.guide.blue }  
     ].map(item => {
         let vp = new THREE.Vector2(Infinity, Infinity);
         const dz = item.dir.z;

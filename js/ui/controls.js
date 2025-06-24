@@ -207,7 +207,7 @@ export class Controls {
             // Create new hemisphere with updated radius
             const hemisphereGeometry = new THREE.SphereGeometry(state.hemisphereRadius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
             const hemisphereMaterial = new THREE.MeshBasicMaterial({ 
-                color: config.colors.hemisphere, 
+                color: config.COLORS.hemisphere, 
                 transparent: true, 
                 opacity: 0.15, 
                 side: THREE.DoubleSide 
@@ -218,7 +218,7 @@ export class Controls {
             
             const hemisphereWireframe = new THREE.WireframeGeometry(hemisphereGeometry);
             const wireframeMaterial = new THREE.LineBasicMaterial({ 
-                color: config.colors.hemisphere, 
+                color: config.COLORS.hemisphere, 
                 opacity: 0.3, 
                 transparent: true 
             });
@@ -239,10 +239,8 @@ export class Controls {
         // Only debounce slider updates, not mouse interactions
         if (this.updateTimeout) clearTimeout(this.updateTimeout);
         this.updateTimeout = setTimeout(() => {
-            if (this.projectionManager.shouldUpdate()) {
-                // Projection manager will handle the actual update
-                this.projectionManager.scheduleUpdate('all');
-            }
+            // Always schedule an update when controls change
+            this.projectionManager.scheduleUpdate('all');
             this.updateTimeout = null;
         }, 8); // Reduced debouncing for better responsiveness
     }
