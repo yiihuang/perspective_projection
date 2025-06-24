@@ -2,10 +2,21 @@
 
 An interactive web application that visualizes the principles of **perspective projection** by demonstrating how a 3D cube projects onto different 2D surfaces. This educational tool helps users understand fundamental concepts in computer graphics, computer vision, and technical drawing by comparing **linear perspective** (planar projection) with **hemispherical perspective** (spherical projection).
 
+## 🌐 Live Demo
+
+**[🚀 Try it now!](https://yiihuang.github.io/perspective_projection/index.html)** - No installation required!
+
 ## 🚀 Quick Start
 
-### Run the Application
+### Option 1: Use the Live Demo (Recommended)
+Simply visit the live demo link above - no setup required!
+
+### Option 2: Run Locally
 ```bash
+# Clone the repository
+git clone https://github.com/yiihuang/perspective_projection.git
+cd perspective_projection
+
 # Start local server (required for ES6 modules)
 python3 -m http.server 8000
 
@@ -17,6 +28,44 @@ http://localhost:8000/index.html
 ```bash
 npx http-server -p 8000
 ```
+
+## 📡 GitHub Pages Deployment
+
+This application is deployed using **GitHub Pages**, making it accessible worldwide without any server setup. Here's how it works:
+
+### Why GitHub Pages?
+- **Free hosting** for static web applications
+- **Automatic deployment** from your GitHub repository
+- **Custom domain support** (optional)
+- **HTTPS by default** for secure connections
+- **Global CDN** for fast loading worldwide
+
+### How to Deploy Your Own Version
+
+1. **Fork the Repository**
+   ```bash
+   # Fork on GitHub, then clone your fork
+   git clone https://github.com/YOUR_USERNAME/perspective_projection.git
+   ```
+
+2. **Enable GitHub Pages**
+   - Go to your repository on GitHub
+   - Click **Settings** → **Pages**
+   - Under **Source**, select **Deploy from a branch**
+   - Choose **main** branch and **/ (root)** folder
+   - Click **Save**
+
+3. **Access Your Deployment**
+   - Your app will be available at: `https://YOUR_USERNAME.github.io/perspective_projection/`
+   - It may take a few minutes for the first deployment
+
+### Deployment Requirements
+✅ **This application is perfect for GitHub Pages because**:
+- Pure client-side JavaScript (no server required)
+- Uses ES6 modules (supported by modern browsers)
+- All dependencies loaded via CDN (Three.js)
+- No build process or compilation needed
+- Responsive design works on all devices
 
 ## 🎯 What This Application Demonstrates
 
