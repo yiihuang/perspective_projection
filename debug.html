@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Perspective Visualization</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .debug-container {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #3e3e42;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .log-info { background-color: #0e639c; color: white; }
+        .log-success { background-color: #107c10; color: white; }
+        .log-error { background-color: #d13438; color: white; }
+        .log-warn { background-color: #fc9803; color: white; }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 4px solid #007acc;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🐛 Debug Console - Perspective Visualization</h1>
+        <div id="debug-log"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const debugLog = document.getElementById('debug-log');
+        
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugLog.appendChild(entry);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        // Capture console errors
+        window.addEventListener('error', (e) => {
+            log(`❌ Global Error: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            log(`❌ Unhandled Promise Rejection: ${e.reason}`, 'error');
+        });
+        
+        async function debugModules() {
+            log('🚀 Starting debug session...');
+            log(`📍 Current URL: ${window.location.href}`);
+            log(`🌐 Three.js loaded: ${typeof THREE !== 'undefined' ? '✅' : '❌'}`);
+            
+            // Test each module individually
+            const modules = [
+                'js/config.js',
+                'js/state.js',
+                'js/utils/three-utils.js',
+                'js/scenes/scene-manager.js',
+                'js/scenes/objects.js',
+                'js/ui/window-manager.js',
+                'js/projections/linear-projection.js',
+                'js/projections/hemispherical-projection.js',
+                'js/projections/projection-manager.js',
+                'js/events/mouse-handlers.js',
+                'js/ui/controls.js',
+                'js/rendering/renderer.js',
+                'js/main.js'
+            ];
+            
+            for (const modulePath of modules) {
+                try {
+                    log(`📦 Testing import: ${modulePath}`, 'info');
+                    const module = await import(`./${modulePath}`);
+                    log(`✅ Successfully imported: ${modulePath}`, 'success');
+                    log(`📋 Exports: ${Object.keys(module).join(', ') || 'default'}`, 'info');
+                } catch (error) {
+                    log(`❌ Failed to import ${modulePath}:`, 'error');
+                    log(`🔍 Error details: ${error.message}`, 'error');
+                    log(`📍 Stack trace:`, 'error');
+                    const stackTrace = document.createElement('pre');
+                    stackTrace.textContent = error.stack || 'No stack trace available';
+                    debugLog.appendChild(stackTrace);
+                    return; // Stop on first error
+                }
+            }
+            
+            log('🎉 All modules imported successfully!', 'success');
+            
+            // Test main initialization
+            try {
+                log('🏁 Testing main application initialization...', 'info');
+                const { init } = await import('./js/main.js');
+                log('📞 Calling init function...', 'info');
+                await init();
+                log('🎊 Application initialized successfully!', 'success');
+            } catch (error) {
+                log(`❌ Application initialization failed: ${error.message}`, 'error');
+                const stackTrace = document.createElement('pre');
+                stackTrace.textContent = error.stack || 'No stack trace available';
+                debugLog.appendChild(stackTrace);
+            }
+        }
+        
+        // Start debugging when page loads
+        document.addEventListener('DOMContentLoaded', debugModules);
+    </script>
+</body>
+</html> 

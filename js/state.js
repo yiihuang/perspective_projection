@@ -1,5 +1,5 @@
 // State Management
-import { CONFIG } from './config.js';
+import { config } from './config.js';
 
 // Global application state
 export const state = {
@@ -16,14 +16,14 @@ export const state = {
     hemisphereCenter: new THREE.Vector3(),
     
     // Parameters
-    hemisphereRadius: CONFIG.DEFAULTS.hemisphereRadius,
+    hemisphereRadius: config.DEFAULTS.hemisphereRadius,
     viewpointPosition: new THREE.Vector3(
-        CONFIG.DEFAULTS.viewpointPosition.x,
-        CONFIG.DEFAULTS.viewpointPosition.y,
-        CONFIG.DEFAULTS.viewpointPosition.z
+        config.DEFAULTS.viewpointPosition.x,
+        config.DEFAULTS.viewpointPosition.y,
+        config.DEFAULTS.viewpointPosition.z
     ),
-    cubeLocalRotation: { ...CONFIG.DEFAULTS.cubeLocalRotation },
-    zoomLevel2D: CONFIG.DEFAULTS.zoomLevel2D,
+    cubeLocalRotation: { ...config.DEFAULTS.cubeLocalRotation },
+    zoomLevel2D: config.DEFAULTS.zoomLevel2D,
     
     // Groups for different elements
     groups: {},
@@ -69,12 +69,6 @@ export const state = {
     // Performance monitoring
     performance: {
         updateTimeout: null,
-        lastActivity: Date.now(),
-        isIdle: false,
-        frameCount: 0,
-        lastFrameTime: Date.now(),
-        targetFPS: CONFIG.PERFORMANCE.targetFPS,
-        frameInterval: CONFIG.PERFORMANCE.frameInterval,
         renderStats: {
             totalFrames: 0,
             skippedFrames: 0,
@@ -82,7 +76,15 @@ export const state = {
             renderTime: 0,
             lastFPSTime: Date.now()
         }
-    }
+    },
+    
+    // Flattened performance properties for easier access
+    lastActivity: Date.now(),
+    isIdle: false,
+    frameCount: 0,
+    lastFrameTime: Date.now(),
+    targetFPS: config.PERFORMANCE.targetFPS,
+    frameInterval: config.PERFORMANCE.frameInterval
 };
 
 // State helper functions

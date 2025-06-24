@@ -139,174 +139,20 @@
     </div>
 
     <script>
-        // Global variables
-        let scenes = {}, cameras = {}, renderers = {};
-        let cube, viewpointSphere, imagePlane, hemisphere;
-        let hemisphereCenter = new THREE.Vector3();
-        
-        // Window management
-        let windowStates = {
-            'linear3D-window': true,
-            'linear2D-window': true,
-            'hemi3D-window': true,
-            'hemi2D-window': true
-        };
-        
-        let dragState = {
-            isDragging: false,
-            currentWindow: null,
-            startX: 0,
-            startY: 0,
-            startLeft: 0,
-            startTop: 0
-        };
-        
-        // Parameters
-        const CUBE_SIZE = 4;
-        let hemisphereRadius = 6;
-        let viewpointPosition = new THREE.Vector3(0, 2, 8);
-        
-        // Image plane Z position is now calculated dynamically based on viewpoint and hemisphere radius
-        function getImagePlaneZ() {
-            return viewpointPosition.z - hemisphereRadius;
+        // Legacy window management functions for HTML onclick handlers
+        function toggleWindow(windowId) {
+            if (window.windowManager) {
+                window.windowManager.toggleWindow(windowId);
+            } else {
+                console.warn('Window manager not yet initialized');
+            }
         }
-        let cubeLocalRotation = { x: 0, y: 0, z: 0 };
         
-        // Groups for different elements
-        let groups = {};
-        let zoomLevel2D = 25;
+        // Export toggleWindow globally for HTML onclick handlers
+        window.toggleWindow = toggleWindow;
 
-        // Performance optimization: Change tracking and caching
-        let needsUpdate = {
-            linear: true,
-            hemi: true,
-            render: true
-        };
-        
-        // Viewport-specific dirty tracking for selective rendering
-        let viewportDirty = {
-            linear3D: true,
-            linear2D: true,
-            hemi3D: true,
-            hemi2D: true
-        };
-        
-        let cachedWorldVertices = null;
-        let lastCubeMatrixWorld = new THREE.Matrix4();
-        let lastUpdateHash = '';
-        
-        // Rendering efficiency variables
-        let updateTimeout = null;
-        let lastActivity = Date.now();
-        let isIdle = false;
-        let frameCount = 0;
-        let lastFrameTime = Date.now();
-        let targetFPS = 60;
-        let frameInterval = 1000 / targetFPS;
-        
-        // Performance monitoring (optional)
-        let renderStats = {
-            totalFrames: 0,
-            skippedFrames: 0,
-            lastFPS: 60,
-            renderTime: 0,
-            lastFPSTime: Date.now()
-        };
-        
-        // Performance debug function (accessible from console)
-        window.getRenderStats = function() {
-            const efficiency = renderStats.totalFrames > 0 ? 
-                (1 - renderStats.skippedFrames / renderStats.totalFrames) * 100 : 100;
-            return {
-                ...renderStats,
-                efficiency: `${efficiency.toFixed(1)}%`,
-                currentFPS: targetFPS,
-                isIdle: isIdle
-            };
-        };
-        
-        // Optional: Add performance overlay (uncomment to enable)
-        /*
-        function createPerformanceOverlay() {
-            const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: fixed; top: 10px; right: 10px; 
-                background: rgba(0,0,0,0.8); color: white; 
-                padding: 10px; font-family: monospace; font-size: 12px;
-                border-radius: 5px; z-index: 1000;
-            `;
-            document.body.appendChild(overlay);
-            
-            setInterval(() => {
-                const stats = getRenderStats();
-                overlay.innerHTML = `
-                    FPS: ${stats.lastFPS}<br>
-                    Target: ${stats.currentFPS}<br>
-                    Efficiency: ${stats.efficiency}<br>
-                    Render Time: ${stats.renderTime.toFixed(2)}ms<br>
-                    Status: ${stats.isIdle ? 'Idle' : 'Active'}
-                `;
-            }, 500);
-        }
-        // createPerformanceOverlay(); // Uncomment to enable overlay
-        */
-        
-        function scheduleUpdate(updateType = 'all', immediate = false) {
-            lastActivity = Date.now(); // Track user activity
-            
-            // Mark viewports as dirty based on update type
-            if (updateType === 'all') {
-                Object.keys(viewportDirty).forEach(key => viewportDirty[key] = true);
-                needsUpdate.linear = true;
-                needsUpdate.hemi = true;
-            } else if (updateType === 'linear') {
-                viewportDirty.linear3D = true;
-                viewportDirty.linear2D = true;
-                needsUpdate.linear = true;
-            } else if (updateType === 'hemi') {
-                viewportDirty.hemi3D = true;
-                viewportDirty.hemi2D = true;
-                needsUpdate.hemi = true;
-            } else if (updateType === 'camera') {
-                // Only 3D viewports need update for camera changes
-                viewportDirty.linear3D = true;
-                viewportDirty.hemi3D = true;
-            } else if (updateType === 'zoom2D') {
-                // Only 2D viewports need update for zoom changes
-                viewportDirty.linear2D = true;
-                viewportDirty.hemi2D = true;
-            }
-            
-            needsUpdate.render = true;
-            
-            // Boost frame rate during interaction
-            targetFPS = 60;
-            frameInterval = 1000 / targetFPS;
-            
-            if (immediate) {
-                // For interactive updates, update immediately
-                if (needsUpdate.linear || needsUpdate.hemi) {
-                    updateProjections();
-                }
-                return;
-            }
-            
-            // Only debounce slider updates, not mouse interactions
-            if (updateTimeout) clearTimeout(updateTimeout);
-            updateTimeout = setTimeout(() => {
-                if (needsUpdate.linear || needsUpdate.hemi) {
-                    updateProjections();
-                }
-                updateTimeout = null;
-            }, 8); // Reduced debouncing for better responsiveness
-        }
-        
-        function generateUpdateHash() {
-            return `${viewpointPosition.x},${viewpointPosition.y},${viewpointPosition.z},${hemisphereRadius},${cube.rotation.x},${cube.rotation.y},${cube.rotation.z},${cube.position.x},${cube.position.y},${cube.position.z}`;
-        }
-        
-        function getCachedWorldVertices() {
-            cube.updateMatrixWorld();
+
+
             
             // Check if cube transform has changed
             if (!lastCubeMatrixWorld.equals(cube.matrixWorld) || !cachedWorldVertices) {
