@@ -1,0 +1,94 @@
+/* Windows CSS - Window system styles */
+.window {
+    position: absolute;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    min-height: 150px;
+    resize: both;
+    overflow: hidden;
+}
+
+.window-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 12px;
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    border-radius: 7px 7px 0 0;
+}
+
+.window-title {
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.window-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.window-button {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.window-button:hover {
+    opacity: 1;
+}
+
+.close-btn {
+    background: #ff5f56;
+    color: white;
+}
+
+.window-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Window positioning */
+#linear3D-window { 
+    top: 20px;
+    left: 20px;
+    width: 48vw;
+    height: 45vh;
+}
+
+#linear2D-window { 
+    top: 20px;
+    right: 20px;
+    width: 48vw;
+    height: 45vh;
+}
+
+#hemi3D-window { 
+    bottom: 20px;
+    left: 20px;
+    width: 48vw;
+    height: 45vh;
+}
+
+#hemi2D-window { 
+    bottom: 20px;
+    right: 20px;
+    width: 48vw;
+    height: 45vh;
+} 
