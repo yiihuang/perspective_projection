@@ -1,6 +1,7 @@
 import { updateLinearProjection } from './linear-projection.js';
 import { updateHemisphericalProjection } from './hemispherical-projection.js';
 import { state } from '../state.js';
+import { clearGroup } from '../utils/three-utils.js';
 
 /**
  * Projection Manager Module
@@ -20,7 +21,7 @@ export class ProjectionManager {
     }
 
     generateUpdateHash() {
-        return `${state.viewpointPosition.x},${state.viewpointPosition.y},${state.viewpointPosition.z},${state.hemisphereRadius},${state.cubeLocalRotation.x},${state.cubeLocalRotation.y},${state.cubeLocalRotation.z}`;
+        return `${state.viewpointPosition.x},${state.viewpointPosition.y},${state.viewpointPosition.z},${state.hemisphereRadius},${state.cubeLocalRotation.x},${state.cubeLocalRotation.y},${state.cubeLocalRotation.z},${state.showIntersectionRays}`;
     }
 
     updateProjections(scenes, groups, cube, viewpointSphere, imagePlane, hemisphere) {
@@ -31,9 +32,14 @@ export class ProjectionManager {
         }
         this.lastUpdateHash = currentHash;
         
+        // Clear master3D projection lines once before both projections add their rays
+        if (state.groups.master3D && state.groups.master3D.projectionLines) {
+            clearGroup(state.groups.master3D.projectionLines);
+        }
+        
         // Always update both projections when needed
-        updateLinearProjection(scenes, groups, cube, viewpointSphere, imagePlane);
-        updateHemisphericalProjection(scenes, groups, cube, viewpointSphere, hemisphere);
+        updateLinearProjection(scenes, groups, imagePlane);
+        updateHemisphericalProjection(scenes, groups, hemisphere);
         
         this.needsUpdate.linear = false;
         this.needsUpdate.hemi = false;

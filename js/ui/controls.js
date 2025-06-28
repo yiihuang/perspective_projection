@@ -1,6 +1,6 @@
 import { state } from '../state.js';
 import { config } from '../config.js';
-import { safeDispose } from '../utils/three-utils.js';
+import { safeDispose, createHemisphere } from '../utils/three-utils.js';
 
 /**
  * Controls Module
@@ -75,6 +75,11 @@ export class Controls {
                 }
             });
         });
+
+        // Ray visualization toggle
+        this.setupCheckboxControl('show-intersection-rays', (checked) => {
+            state.showIntersectionRays = checked;
+        });
     }
 
     setupSliderControl(elementId, updateCallback) {
@@ -133,6 +138,23 @@ export class Controls {
         });
     }
 
+    setupCheckboxControl(elementId, updateCallback) {
+        const checkbox = document.getElementById(elementId);
+        
+        if (!checkbox) {
+            console.error('Checkbox element not found with ID:', elementId);
+            return;
+        }
+        
+        checkbox.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            if (updateCallback) {
+                updateCallback(checked, e);
+            }
+            this.scheduleUpdate();
+        });
+    }
+
     setupRotationControl(elementId, axis, rotationObj) {
         const slider = document.getElementById(elementId);
         const numberInput = document.getElementById(elementId + '-number');
@@ -142,7 +164,8 @@ export class Controls {
             const delta = newRotation - rotationObj[axis];
             rotationObj[axis] = newRotation;
             
-            const cube = this.sceneObjects?.cube;
+            // Phase 4: Use master scene cube instead of individual scene reference
+            const cube = state.cube;
             if (cube) {
                 const axisVector = new THREE.Vector3();
                 axisVector[axis] = 1;
@@ -196,39 +219,25 @@ export class Controls {
     }
 
     recreateHemisphere() {
-        const hemisphere = this.sceneObjects?.hemisphere;
-        const scenes = window.scenes;
+        // Phase 4: Use master3D architecture instead of individual scenes
+        const hemisphere = state.hemisphere;
         
-        if (hemisphere && scenes) {
-            // Remove old hemisphere
-            scenes.hemi3D.remove(hemisphere);
+        if (hemisphere && state.master3D) {
+            // Remove old hemisphere from master scene
+            state.master3D.remove(hemisphere);
             safeDispose(hemisphere);
             
-            // Create new hemisphere with updated radius
-            const hemisphereGeometry = new THREE.SphereGeometry(state.hemisphereRadius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-            const hemisphereMaterial = new THREE.MeshBasicMaterial({ 
-                color: config.COLORS.hemisphere, 
-                transparent: true, 
-                opacity: 0.15, 
-                side: THREE.DoubleSide 
-            });
-            const newHemisphere = new THREE.Mesh(hemisphereGeometry, hemisphereMaterial);
-            newHemisphere.position.copy(state.viewpointPosition);
-            newHemisphere.rotation.x = -Math.PI / 2;
+            // Create new hemisphere with updated radius using shared function
+            const newHemisphere = createHemisphere(state.hemisphereRadius, state.viewpointPosition);
+            state.master3D.add(newHemisphere);
             
-            const hemisphereWireframe = new THREE.WireframeGeometry(hemisphereGeometry);
-            const wireframeMaterial = new THREE.LineBasicMaterial({ 
-                color: config.COLORS.hemisphere, 
-                opacity: 0.3, 
-                transparent: true 
-            });
-            const hemisphereWire = new THREE.LineSegments(hemisphereWireframe, wireframeMaterial);
-            newHemisphere.add(hemisphereWire);
+            // Update state reference
+            state.hemisphere = newHemisphere;
             
-            scenes.hemi3D.add(newHemisphere);
-            
-            // Update reference
-            this.sceneObjects.hemisphere = newHemisphere;
+            // Update legacy references for compatibility
+            if (this.sceneObjects) {
+                this.sceneObjects.hemisphere = newHemisphere;
+            }
             if (window.sceneObjects) {
                 window.sceneObjects.hemisphere = newHemisphere;
             }

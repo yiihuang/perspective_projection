@@ -8,6 +8,9 @@ export const state = {
     cameras: {},
     renderers: {},
     
+    // Master 3D scene (shared between linear3D and hemi3D viewports)
+    master3D: null,
+    
     // 3D objects
     cube: null,
     viewpointSphere: null,
@@ -24,6 +27,7 @@ export const state = {
     ),
     cubeLocalRotation: { ...config.DEFAULTS.cubeLocalRotation },
     zoomLevel2D: config.DEFAULTS.zoomLevel2D,
+    zoom3D: config.DEFAULTS.zoom3D,
     
     // Groups for different elements
     groups: {},
@@ -60,6 +64,9 @@ export const state = {
         hemi3D: true,
         hemi2D: true
     },
+    
+    // Ray visualization toggles
+    showIntersectionRays: true,  // When true: complementary rays (green + red segments), when false: full red rays only
     
     // Cached data for performance
     cachedWorldVertices: null,

@@ -46,7 +46,7 @@ export class Renderer {
                                 this.renderers[id].setSize(viewElement.clientWidth, viewElement.clientHeight);
                                 state.viewportDirty[id] = true;
                                 this.projectionManager.markRenderNeeded();
-                                this.renderers[id].render(this.scenes[id], this.cameras[id]);
+                                this.renderViewport(id);
                             }
                         }
                     });
@@ -115,7 +115,7 @@ export class Renderer {
                         // Force immediate render after resize
                         state.viewportDirty[id] = true;
                         this.projectionManager.markRenderNeeded();
-                        renderer.render(this.scenes[id], camera);
+                        this.renderViewport(id);
                     }
                 });
             });
@@ -172,7 +172,8 @@ export class Renderer {
         if (!state.isIdle || this.projectionManager.isRenderNeeded()) {
             Object.keys(this.renderers).forEach(id => {
                 if (state.viewportDirty[id] || !state.isIdle) {
-                    this.renderers[id].render(this.scenes[id], this.cameras[id]);
+                    // Step 3: Use direct master scene rendering for 3D viewports
+                    this.renderViewport(id);
                     state.viewportDirty[id] = false;
                     rendered = true;
                 }
@@ -197,6 +198,45 @@ export class Renderer {
                 this.renderStats.lastFPS = Math.round(60000 / timeDiff);
             }
             this.renderStats.lastFPSTime = now;
+        }
+    }
+
+    /**
+     * Step 3: Direct Master Scene Rendering with Projection Surface Control
+     * Renders master scene directly for 3D viewports with appropriate projection surface visibility
+     * Renders 2D viewports normally
+     */
+    renderViewport(id) {
+        const renderer = this.renderers[id];
+        const camera = this.cameras[id];
+        
+        if (id.includes('3D') && state.master3D) {
+            // Step 3: Direct master scene rendering with projection surface visibility control
+            this.setProjectionSurfaceVisibility(id);
+            renderer.render(state.master3D, camera);
+        } else {
+            // For 2D viewports: normal rendering
+            renderer.render(this.scenes[id], camera);
+        }
+    }
+
+    /**
+     * Step 3: Control Projection Surface Visibility per 3D Viewport
+     * Shows appropriate projection surface based on viewport type
+     */
+    setProjectionSurfaceVisibility(viewportId) {
+        if (!state.imagePlane || !state.hemisphere) {
+            return;
+        }
+        
+        if (viewportId === 'linear3D') {
+            // Linear 3D viewport: show image plane, hide hemisphere
+            state.imagePlane.visible = true;
+            state.hemisphere.visible = false;
+        } else if (viewportId === 'hemi3D') {
+            // Hemispherical 3D viewport: show hemisphere, hide image plane
+            state.imagePlane.visible = false;
+            state.hemisphere.visible = true;
         }
     }
 

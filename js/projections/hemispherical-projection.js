@@ -1,6 +1,6 @@
 import { state } from '../state.js';
 import { config } from '../config.js';
-import { createMaterial, clearGroup, updateCubeInScene, updateViewpointInScene, updateProjectedViewpointMarker, getCachedWorldVertices, safeDispose } from '../utils/three-utils.js';
+import { createMaterial, clearGroup, updateCubeInScene, updateViewpointInScene, updateProjectedViewpointMarker, getCachedWorldVertices, safeDispose, updateMaster3DScene, RAY_MATERIALS } from '../utils/three-utils.js';
 
 /**
  * Hemispherical Perspective Projection Module
@@ -99,10 +99,11 @@ export function createHemi2DBoundary(scene, hemisphereRadius) {
     return hemiBoundary;
 }
 
-export function updateHemisphericalProjection(scenes, groups, cube, viewpointSphere, hemisphere) {
-    // Update cube and viewpoint positions using helper functions
-    updateCubeInScene('hemi3D', cube, scenes.hemi3D);
-    updateViewpointInScene('hemi3D', state.viewpointPosition, scenes.hemi3D);
+export function updateHemisphericalProjection(scenes, groups, hemisphere) {
+    // Update shared 3D scene objects (cube, viewpoint) - using custom ray handling
+    const worldVertices = updateMaster3DScene({
+        customRayHandling: true  // We'll handle rays ourselves with complementary system
+    });
     
     // Update hemisphere
     const hemisphereCenter = state.viewpointPosition.clone();
@@ -116,9 +117,8 @@ export function updateHemisphericalProjection(scenes, groups, cube, viewpointSph
     }
     window.hemiBoundary = createHemi2DBoundary(scenes.hemi2D, state.hemisphereRadius);
     
-    // Clear previous projections
+    // Clear previous 2D projections only (3D was handled by shared function)
     Object.values(groups.hemi2D).forEach(group => clearGroup(group));
-    Object.values(groups.hemi3D).forEach(group => clearGroup(group));
     
     // Update projected viewpoint marker
     const hemisphereDir = hemisphereCenter.clone().sub(state.viewpointPosition).normalize();
@@ -128,22 +128,39 @@ export function updateHemisphericalProjection(scenes, groups, cube, viewpointSph
         updateProjectedViewpointMarker('hemi2D', projected2D.x, projected2D.y, scenes.hemi2D);
     }
     
-    // Project cube vertices (use cached vertices for better performance)
-    const worldVertices = getCachedWorldVertices(cube);
+    // Calculate hemisphere intersections and 2D projections with ray visualization based on toggle state
     const projectedVertices = [];
 
-    // Draw projection lines and calculate hemisphere intersections
     worldVertices.forEach(worldVertex => {
         const rayDirection = worldVertex.clone().sub(state.viewpointPosition).normalize();
         
-        const lineMat = createMaterial('ProjectionLineMaterial', { opacity: 0.3 });
-        const extendedPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
-        groups.hemi3D.projectionLines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, extendedPoint]), lineMat));
-        
         const hemisphereIntersection = intersectRayWithHemisphere(state.viewpointPosition, rayDirection, hemisphereCenter, state.hemisphereRadius);
         if (hemisphereIntersection) {
-            const hemisphereLineMat = createMaterial('ProjectionLineMaterial', { color: 0x00ff00, opacity: 0.6 });
-            groups.hemi3D.projectionLines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, hemisphereIntersection]), hemisphereLineMat));
+            if (state.showIntersectionRays) {
+                // Complementary ray system (green + red segments to avoid overlap)
+                // Green ray: viewpoint → hemisphere intersection (bright, thick)
+                const greenRay = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, hemisphereIntersection]), 
+                    RAY_MATERIALS.GREEN_INTERSECTION
+                );
+                state.groups.master3D.projectionLines.add(greenRay);
+                
+                // Red ray: hemisphere intersection → extended point (complementary segment)
+                const extendedPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
+                const redRay = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([hemisphereIntersection, extendedPoint]), 
+                    RAY_MATERIALS.RED_COMPLEMENT_HEMI
+                );
+                state.groups.master3D.projectionLines.add(redRay);
+            } else {
+                // Full red rays only (viewpoint → extended points, thicker and more opaque)
+                const extendedPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
+                const redRay = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, extendedPoint]), 
+                    RAY_MATERIALS.RED_EXTENDED
+                );
+                state.groups.master3D.projectionLines.add(redRay);
+            }
             
             const projected2D = postelProjection(hemisphereIntersection, hemisphereCenter, state.hemisphereRadius);
             projectedVertices.push(projected2D);
@@ -197,11 +214,7 @@ export function updateHemisphericalProjection(scenes, groups, cube, viewpointSph
     // Helper functions for arc drawing
     function getVanishingPointForEdge(v1Index, v2Index) {
         const boundaryRadius = (Math.PI / 2) * state.hemisphereRadius;
-        const edgeDirections = {
-            '0,1': 0, '1,0': 0, '1,2': 1, '2,1': 1, '2,3': 0, '3,2': 0, '3,0': 1, '0,3': 1,
-            '4,5': 0, '5,4': 0, '5,6': 1, '6,5': 1, '6,7': 0, '7,6': 0, '7,4': 1, '4,7': 1,
-            '0,4': 2, '4,0': 2, '1,5': 2, '5,1': 2, '2,6': 2, '6,2': 2, '3,7': 2, '7,3': 2
-        };
+        const edgeDirections = config.CUBE_MAPPINGS.edgeDirections;
         
         const key = `${v1Index},${v2Index}`;
         let axisIndex = edgeDirections[key];
@@ -226,7 +239,7 @@ export function updateHemisphericalProjection(scenes, groups, cube, viewpointSph
     }
 
     // Draw projected cube edges as circular arcs
-    const edges = [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ];
+    const edges = config.CUBE_MAPPINGS.edges;
     const projectedLineMaterial = new THREE.LineBasicMaterial({ color: config.COLORS.cubeEdge, linewidth: 2 });
     
     for (let i = 0; i < edges.length; i += 2) {

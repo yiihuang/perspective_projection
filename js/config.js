@@ -59,5 +59,25 @@ export const config = {
             y: 0xaaffaa,
             z: 0xaaaaff
         }
+    },
+
+    // Shared geometry mappings
+    CUBE_MAPPINGS: {
+        // Edge list for cube (pairs of vertex indices)
+        edges: [0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7],
+        
+        // Maps axis index to vertex indices for that axis
+        edgeAxisMapping: {
+            0: [0, 1, 2, 3, 4, 5, 6, 7], // X-axis edges (indices of vertices)
+            1: [0, 3, 1, 2, 4, 7, 5, 6], // Y-axis edges
+            2: [0, 4, 1, 5, 2, 6, 3, 7]  // Z-axis edges
+        },
+        
+        // Maps edge pairs to axis indices
+        edgeDirections: {
+            '0,1': 0, '1,0': 0, '1,2': 1, '2,1': 1, '2,3': 0, '3,2': 0, '3,0': 1, '0,3': 1,
+            '4,5': 0, '5,4': 0, '5,6': 1, '6,5': 1, '6,7': 0, '7,6': 0, '7,4': 1, '4,7': 1,
+            '0,4': 2, '4,0': 2, '1,5': 2, '5,1': 2, '2,6': 2, '6,2': 2, '3,7': 2, '7,3': 2
+        }
     }
 }; 

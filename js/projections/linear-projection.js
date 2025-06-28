@@ -1,6 +1,6 @@
 import { state } from '../state.js';
 import { config } from '../config.js';
-import { createMaterial, clearGroup, updateCubeInScene, updateViewpointInScene, updateProjectedViewpointMarker, getCachedWorldVertices } from '../utils/three-utils.js';
+import { createMaterial, clearGroup, updateCubeInScene, updateViewpointInScene, updateProjectedViewpointMarker, getCachedWorldVertices, updateMaster3DScene, RAY_MATERIALS } from '../utils/three-utils.js';
 
 /**
  * Linear Perspective Projection Module
@@ -27,10 +27,11 @@ export function createLinear2DBoundary(scene) {
     return linearBoundary;
 }
 
-export function updateLinearProjection(scenes, groups, cube, viewpointSphere, imagePlane) {
-    // Update cube and viewpoint positions using helper functions
-    updateCubeInScene('linear3D', cube, scenes.linear3D);
-    updateViewpointInScene('linear3D', state.viewpointPosition, scenes.linear3D);
+export function updateLinearProjection(scenes, groups, imagePlane) {
+    // Update shared 3D scene objects (cube, viewpoint) - using custom ray handling
+    const worldVertices = updateMaster3DScene({
+        customRayHandling: true  // We'll handle rays ourselves with complementary system
+    });
     
     // Update image plane size, position and center at viewpoint height
     const currentImagePlaneZ = getImagePlaneZ();
@@ -63,22 +64,16 @@ export function updateLinearProjection(scenes, groups, cube, viewpointSphere, im
     }
     window.linearBoundary = createLinear2DBoundary(scenes.linear2D);
     
-    // Clear previous projections
+    // Clear previous 2D projections only (3D was handled by shared function)
     Object.values(groups.linear2D).forEach(group => clearGroup(group));
-    Object.values(groups.linear3D).forEach(group => clearGroup(group));
     
     // Update projected viewpoint marker (always at origin in reference frame)
     updateProjectedViewpointMarker('linear2D', 0, 0, scenes.linear2D);
     
-    // Project cube vertices (use cached vertices for better performance)
-    const worldVertices = getCachedWorldVertices(cube);
+    // Calculate 2D projections (cube vertices already available from shared function)
     const projectedVertices = [];
 
-    // Draw projection lines and calculate 2D projections
     worldVertices.forEach(worldVertex => {
-        const lineMat = createMaterial('ProjectionLineMaterial');
-        groups.linear3D.projectionLines.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, worldVertex]), lineMat));
-        
         const x = worldVertex.x - state.viewpointPosition.x;
         const y = worldVertex.y - state.viewpointPosition.y;
         const z = worldVertex.z - state.viewpointPosition.z;
@@ -95,8 +90,47 @@ export function updateLinearProjection(scenes, groups, cube, viewpointSphere, im
         }
     });
 
+    // Add ray visualization based on toggle state
+    worldVertices.forEach(worldVertex => {
+        if (state.showIntersectionRays) {
+            // Complementary ray system (green + red segments to avoid overlap)
+            const rayDirection = worldVertex.clone().sub(state.viewpointPosition);
+            
+            // Calculate intersection with image plane
+            if (Math.abs(rayDirection.z) > 0.0001) { // Avoid division by zero
+                const t = (currentImagePlaneZ - state.viewpointPosition.z) / rayDirection.z;
+                
+                // Only draw rays if intersection is between viewpoint and vertex (t > 0)
+                if (t > 0) {
+                    const intersection = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(t));
+                    
+                    // Green ray: viewpoint → image plane intersection (bright, thick)
+                    const greenRay = new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, intersection]), 
+                        RAY_MATERIALS.GREEN_INTERSECTION
+                    );
+                    state.groups.master3D.projectionLines.add(greenRay);
+                    
+                    // Red ray: image plane intersection → cube vertex (complementary segment)
+                    const redRay = new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([intersection, worldVertex]), 
+                        RAY_MATERIALS.RED_COMPLEMENT
+                    );
+                    state.groups.master3D.projectionLines.add(redRay);
+                }
+            }
+        } else {
+            // Full red rays only (viewpoint → cube vertices, thicker and more opaque)
+            const redRay = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, worldVertex]), 
+                RAY_MATERIALS.RED_FULL
+            );
+            state.groups.master3D.projectionLines.add(redRay);
+        }
+    });
+
     // Draw projected cube edges
-    const edges = [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ];
+    const edges = config.CUBE_MAPPINGS.edges;
     const projectedLineMaterial = createMaterial('LineBasicMaterial');
     for (let i = 0; i < edges.length; i += 2) {
         const p1 = projectedVertices[edges[i]];
@@ -144,11 +178,7 @@ export function updateLinearProjection(scenes, groups, cube, viewpointSphere, im
     });
 
     // Draw guide lines from cube edges to vanishing points
-    const edgeAxisMapping = {
-        0: [0, 1,  2, 3,  4, 5,  6, 7], // X-axis edges (indices of vertices)
-        1: [0, 3,  1, 2,  4, 7,  5, 6], // Y-axis edges
-        2: [0, 4,  1, 5,  2, 6,  3, 7]  // Z-axis edges
-    };
+    const edgeAxisMapping = config.CUBE_MAPPINGS.edgeAxisMapping;
 
     vanishingPoints.forEach((vpData, axisIndex) => {
         if (!isFinite(vpData.point.x) || !isFinite(vpData.point.y)) return;

@@ -1,4 +1,4 @@
-# Interactive 3D Perspective Projection Suite
+# 🎯 Interactive 3D Perspective Projection Suite
 
 An interactive web application that visualizes the principles of **perspective projection** by demonstrating how a 3D cube projects onto different 2D surfaces. This educational tool helps users understand fundamental concepts in computer graphics, computer vision, and technical drawing by comparing **linear perspective** (planar projection) with **hemispherical perspective** (spherical projection).
 
@@ -24,49 +24,6 @@ python3 -m http.server 8000
 http://localhost:8000/index.html
 ```
 
-### Alternative: Node.js Server
-```bash
-npx http-server -p 8000
-```
-
-## 📡 GitHub Pages Deployment
-
-This application is deployed using **GitHub Pages**, making it accessible worldwide without any server setup. Here's how it works:
-
-### Why GitHub Pages?
-- **Free hosting** for static web applications
-- **Automatic deployment** from your GitHub repository
-- **Custom domain support** (optional)
-- **HTTPS by default** for secure connections
-- **Global CDN** for fast loading worldwide
-
-### How to Deploy Your Own Version
-
-1. **Fork the Repository**
-   ```bash
-   # Fork on GitHub, then clone your fork
-   git clone https://github.com/YOUR_USERNAME/perspective_projection.git
-   ```
-
-2. **Enable GitHub Pages**
-   - Go to your repository on GitHub
-   - Click **Settings** → **Pages**
-   - Under **Source**, select **Deploy from a branch**
-   - Choose **main** branch and **/ (root)** folder
-   - Click **Save**
-
-3. **Access Your Deployment**
-   - Your app will be available at: `https://YOUR_USERNAME.github.io/perspective_projection/`
-   - It may take a few minutes for the first deployment
-
-### Deployment Requirements
-✅ **This application is perfect for GitHub Pages because**:
-- Pure client-side JavaScript (no server required)
-- Uses ES6 modules (supported by modern browsers)
-- All dependencies loaded via CDN (Three.js)
-- No build process or compilation needed
-- Responsive design works on all devices
-
 ## 🎯 What This Application Demonstrates
 
 This visualization shows the mathematical relationships between 3D objects and their 2D projections across different projection surfaces:
@@ -88,9 +45,30 @@ This visualization shows the mathematical relationships between 3D objects and t
 - **Synchronized Viewpoint**: Same viewpoint position across both perspectives
 - **Dynamic Scaling**: Image plane size (2R × 2R) matches hemisphere diameter
 
-## 🏗️ Modern Architecture
+## 🏗️ Optimized Architecture
 
-This application features a **professional modular architecture** with:
+This application features a **highly optimized modular architecture** achieved through comprehensive code optimization:
+
+### Core Innovation: Master 3D Scene System
+The application uses a revolutionary **single master 3D scene** architecture that eliminates object duplication:
+
+```
+🎯 BEFORE: Redundant Architecture
+├── linear3D scene (cube + viewpoint + hemisphere + lighting + groups)
+├── hemi3D scene   (cube + viewpoint + hemisphere + lighting + groups)  
+└── Duplicate objects, materials, and resources
+
+✅ AFTER: Optimized Master Scene Architecture  
+├── master3D scene (single authoritative 3D scene)
+│   ├── Single cube instance
+│   ├── Single viewpoint sphere
+│   ├── Single hemisphere + image plane (visibility controlled)
+│   ├── Unified lighting system
+│   └── Shared projection groups
+├── linear3D viewport  → Renders master3D (shows image plane only)
+├── hemi3D viewport    → Renders master3D (shows hemisphere only)
+└── 2D scenes (unchanged - linear2D, hemi2D)
+```
 
 ### ES6 Module System
 ```
@@ -104,30 +82,49 @@ index.html (156 lines) - Clean entry point
 │   ├── config.js - Configuration constants
 │   ├── state.js - Centralized state management
 │   ├── scenes/
-│   │   ├── scene-manager.js - Three.js scene setup
-│   │   └── objects.js - 3D object creation
+│   │   ├── scene-manager.js - Master 3D scene setup
+│   │   └── objects.js - Shared object creation
 │   ├── projections/
 │   │   ├── linear-projection.js - Linear perspective math
 │   │   ├── hemispherical-projection.js - Spherical projection math
-│   │   └── projection-manager.js - Projection coordination
+│   │   └── projection-manager.js - Centralized ray management
 │   ├── ui/
 │   │   ├── window-manager.js - Flexible window system
-│   │   └── controls.js - Slider/input controls
+│   │   └── controls.js - Master scene controls
 │   ├── events/
 │   │   └── mouse-handlers.js - Mouse interaction logic
 │   ├── rendering/
-│   │   └── renderer.js - Animation loop & performance
+│   │   └── renderer.js - Optimized viewport rendering
 │   └── utils/
-│       └── three-utils.js - Three.js helper functions
+│       └── three-utils.js - Shared materials & functions
 ```
 
-### Key Improvements
-- **92% reduction** in HTML complexity (1943 → 156 lines)
-- **Professional ES6 module system** with clean separation of concerns
-- **Flexible window management** - drag, resize, show/hide windows
-- **Enhanced UI controls** - sliders with numerical inputs
-- **Comprehensive error handling** and debugging support
-- **Performance optimizations** - smart caching and selective rendering
+## 🚀 Performance Optimizations
+
+### Object Consolidation
+- **Before**: 2× cubes, 2× viewpoint spheres, 2× grid helpers (duplicated)
+- **After**: 1× cube, 1× viewpoint sphere, 1× grid helper (shared in master scene)
+- **Memory Reduction**: ~50% fewer 3D objects
+
+### Material System Optimization
+- **Before**: 6+ material creation calls per update cycle
+- **After**: 5 pre-created shared ray materials (`RAY_MATERIALS`)
+- **Performance**: Eliminated redundant material instantiation
+
+### Function Call Streamlining
+- **Before**: `updateShared3DScene('master3D', state.master3D, state.groups.master3D, cube, viewpointSphere, options)`
+- **After**: `updateMaster3DScene(options)` - automatic object discovery
+- **Parameter Reduction**: 5 → 1 parameter (80% reduction)
+
+### Scene Architecture
+- **Before**: 3× full 3D scenes with lighting + groups + objects
+- **After**: 1× master scene + 2× minimal viewport scenes
+- **Resource Efficiency**: Minimal individual scene setup
+
+### Ray Management Revolution
+- **Before**: Individual scenes conflicting with ray clearing
+- **After**: Centralized master scene ray management
+- **Result**: Perfect ray visualization with no conflicts
 
 ## 🎮 Interactive Features
 
@@ -137,8 +134,10 @@ index.html (156 lines) - Clean entry point
 - **Resizable Windows**: Adjust window sizes as needed
 - **Professional UI**: Modern styling with gradients and shadows
 
-### Enhanced Controls
+### Enhanced Controls (Master Scene Architecture)
 - **Dropdown Controls**: Click "Controls ⚙️" to reveal/hide control panel
+- **Master Scene Integration**: All controls operate on shared objects
+- **Real-time Updates**: Changes instantly reflected in both viewports
 - **Dual Input Methods**: 
   - Sliders for visual adjustment
   - Number inputs for precise values
@@ -146,32 +145,43 @@ index.html (156 lines) - Clean entry point
 - **Value Validation**: Automatic clamping to valid ranges
 
 ### Mouse Controls (Context-Sensitive)
-- **Left-drag in 3D views**: Rotate the cube around its local axes
+- **Left-drag in 3D views**: Rotate the shared cube (affects both viewports)
 - **Right-drag in 3D views**: Rotate the camera around the scene
 - **Drag/Wheel in 2D views**: Zoom in/out on the 2D projections
 - **Window dragging**: Drag windows by their title bars
 
+### Ray Visualization System
+- **Toggle Switch**: "Show Intersection Rays" checkbox
+- **Complementary Mode**: Green rays (viewpoint → surface) + Red rays (surface → vertex)
+- **Full Ray Mode**: Single red rays (viewpoint → vertex)
+- **Master Scene Rendering**: All rays rendered in single shared scene
+
 ### Control Parameters
-- **Viewpoint Y**: Adjust the vertical position of the viewpoint (-10 to +10)
-- **Viewpoint Z**: Move the viewpoint closer/farther from the scene (3 to 20)
-- **Radius R (Both)**: Controls hemisphere radius and image plane distance (1 to 15)
+- **Viewpoint Y**: Adjust the vertical position (-10 to +10)
+- **Viewpoint Z**: Move the viewpoint closer/farther (3 to 20)
+- **Radius R**: Controls hemisphere radius and image plane distance (1 to 15)
 - **3D Zoom**: Control the 3D camera distance (10 to 40)
-- **Cube Rot X/Y/Z**: Precise control of cube rotation around local axes (-180° to +180°)
+- **Cube Rotation X/Y/Z**: Precise control (-180° to +180°)
 
 ## 📊 Visual Elements
 
 ### Four-Window Layout
-- **Linear 3D Scene**: 3D visualization with traditional perspective
+- **Linear 3D Scene**: Master scene rendered with image plane visible
 - **Linear 2D Projection**: Flat projection with straight lines
-- **Hemispherical 3D Scene**: 3D visualization with spherical perspective
+- **Hemispherical 3D Scene**: Master scene rendered with hemisphere visible
 - **Hemispherical 2D Projection**: Curved projection with circular arcs
 
-### 3D Scenes
-- **Blue Cube**: The 3D object being projected (semi-transparent with visible edges)
-- **Red Sphere**: The viewpoint/camera position
-- **Blue Plane/Hemisphere**: The projection surface (plane or hemisphere)
-- **Projection Lines**: Rays from viewpoint through cube vertices
-- **Grid**: Reference ground plane
+### Shared 3D Objects (Master Scene)
+- **Blue Cube**: Single instance in master scene (visible in both 3D viewports)
+- **Red Viewpoint Sphere**: Single instance showing camera position
+- **Projection Surfaces**: Image plane + hemisphere with smart visibility control
+- **Shared Ray System**: Unified projection rays managed centrally
+- **Single Grid**: Shared reference ground plane
+
+### Projection Surface Visibility System
+- **Linear 3D Viewport**: Shows image plane only (`hemisphere.visible = false`)
+- **Hemispherical 3D Viewport**: Shows hemisphere only (`imagePlane.visible = false`)
+- **Dynamic Switching**: Automatic visibility control per viewport
 
 ### 2D Projections
 
@@ -228,106 +238,63 @@ For hemispherical perspective, straight lines become circular arcs determined by
 - **CSS Grid & Flexbox**: Responsive layout system
 - **WebGL**: Hardware-accelerated 3D rendering
 
+### Advanced Features
+- **Master Scene Architecture**: Single authoritative 3D scene with viewport-specific rendering
+- **Shared Material System**: Pre-created materials eliminating runtime instantiation
+- **Centralized Ray Management**: Conflict-free ray visualization system
+- **Smart Visibility Control**: Dynamic projection surface switching
+- **Optimized Function Calls**: Streamlined parameter passing
+
 ### Performance Features
-- **Smart Caching**: Cached vertex calculations and materials
+- **Object Deduplication**: Single instances of all 3D objects
+- **Material Caching**: Shared ray materials (`RAY_MATERIALS`)
 - **Selective Rendering**: Only render dirty viewports
+- **Memory Optimization**: Minimal scene resource usage
 - **Frame Rate Management**: Adaptive FPS based on activity
-- **Memory Management**: Proper disposal of Three.js objects
-- **Error Boundaries**: Comprehensive error handling
 
 ### Development Features
+- **Clean Architecture**: "Change one place for one functionality"
 - **Module Hot Loading**: Easy development iteration
-- **Debug Infrastructure**: Built-in debugging tools
-- **Test Framework**: Module validation system
-- **Clear Error Reporting**: Detailed error messages and stack traces
+- **Comprehensive Error Handling**: Detailed error messages
+- **Professional Code Structure**: Clear separation of concerns
 
-## 🧪 Testing & Debugging
+## 📈 Optimization Results
 
-### Testing Tools
-- **Module Validator**: `test-modules.html` - Validates all ES6 imports
-- **Browser Console**: Press F12 for detailed debugging
-- **Performance Monitor**: Built-in FPS tracking
+### Code Quality Improvements
+- **Eliminated Redundancy**: No more duplicate objects across scenes
+- **Centralized Control**: All functionality operates on shared objects
+- **Maintainable Code**: Single source of truth for all 3D objects
+- **Performance Gains**: Reduced memory usage and faster rendering
 
-### Quick Test Checklist
-1. **Load Test**: All 4 windows should appear with 3D graphics
-2. **Controls Test**: Sliders and number inputs should sync
-3. **Window Test**: Drag windows, toggle visibility
-4. **Interaction Test**: Left-click cube, right-click camera
-5. **Performance Test**: Smooth 60fps animation
+### Developer Experience
+- **Simplified Debugging**: Only one place to check for 3D object state
+- **Easier Feature Addition**: New features automatically work in both viewports
+- **Clean Codebase**: Removed duplicate logic and redundant parameters
+- **Professional Architecture**: Industry-standard modular design
 
-For detailed testing instructions, see [TESTING_GUIDE.md](TESTING_GUIDE.md).
+## 🎓 Educational Value
 
-## 📚 Educational Applications
-
-This tool is valuable for:
-
-### Computer Graphics Courses
-- **Projection Types**: Comparing planar vs spherical projections
-- **Coordinate Transformations**: Understanding different mapping methods
-- **Vanishing Point Theory**: How parallel lines converge differently
-
-### Computer Vision
-- **Camera Models**: Different lens types and distortion effects
-- **Spherical Imaging**: Wide-angle and fisheye camera systems
-- **Projection Geometry**: Mathematical foundations of image formation
-
-### Mathematics Education
-- **3D to 2D Mappings**: Different mathematical approaches to dimensionality reduction
-- **Spherical Geometry**: Understanding curved surface projections
-- **Trigonometry**: Practical applications of angular relationships
-
-### Art and Design
-- **Perspective Drawing**: Traditional vs wide-angle perspective effects
-- **Architectural Visualization**: How different projection methods affect perception
-- **Digital Art**: Understanding distortion in different projection systems
-
-## 🔧 Customization
-
-### Modifying Parameters
-Key parameters can be adjusted in `js/config.js`:
-- **CUBE_SIZE**: Size of the 3D cube
-- **Color schemes**: Projection lines, vanishing points, etc.
-- **Performance settings**: FPS limits, cache sizes
-- **UI settings**: Window positions, control ranges
-
-### Adding Features
-The modular architecture allows for easy extensions:
-- Additional 3D objects (spheres, pyramids, etc.)
-- Different projection types (orthographic, cylindrical, etc.)
-- Export functionality for projections
-- Animation sequences
-- Multiple viewpoints
-- Custom projection surfaces
-
-## 🐛 Browser Compatibility
-
-- **Modern Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
-- **WebGL Support**: Required for Three.js rendering
-- **ES6 Module Support**: Required for the modular architecture
-- **Performance**: Optimized for 60fps real-time interaction
-
-## 📖 Documentation
-
-- **[MODULARIZATION_REPORT.md](MODULARIZATION_REPORT.md)**: Detailed technical report on the modular architecture
-- **[TESTING_GUIDE.md](TESTING_GUIDE.md)**: Comprehensive testing instructions
-- **[backup/README.md](backup/README.md)**: Information about archived legacy files
-
-## 📖 Further Reading
-
-### Projection Theory
-- [Perspective Projection (Wikipedia)](https://en.wikipedia.org/wiki/3D_projection#Perspective_projection)
-- [Spherical Perspective](https://en.wikipedia.org/wiki/Curvilinear_perspective)
-- [Postel Projection](https://en.wikipedia.org/wiki/Azimuthal_equidistant_projection)
-
-### Technical Documentation
-- [Three.js Documentation](https://threejs.org/docs/)
-- [ES6 Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
-- [WebGL Fundamentals](https://webglfundamentals.org/)
+This application demonstrates key concepts in:
+- **Computer Graphics**: Perspective projection mathematics
+- **3D Rendering**: Scene management and viewport control
+- **Software Architecture**: Optimization through consolidation
+- **Performance Engineering**: Memory optimization and efficient rendering
+- **User Interface Design**: Professional controls and window management
 
 ## 📄 License
 
 This project is open source and available under the MIT License.
 
----
+## 🤝 Contributing
 
-*A modern, modular educational tool for understanding 3D perspective projection mathematics through interactive visualization. Features professional ES6 architecture with comprehensive testing and debugging support.* 
+Contributions are welcome! The optimized architecture makes it easy to:
+- Add new projection types
+- Implement additional visualization features  
+- Enhance the UI/UX
+- Improve performance further
+
+## 🙏 Acknowledgments
+
+- **Three.js Community** for the excellent 3D graphics library
+- **GitHub Pages** for free hosting of static applications
+- **WebGL** for hardware-accelerated 3D rendering 

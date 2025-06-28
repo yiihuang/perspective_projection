@@ -1,6 +1,7 @@
 // Window Management System
 import { state } from '../state.js';
 import { config } from '../config.js';
+import { update2DCameras } from '../scenes/scene-manager.js';
 
 /**
  * Window Manager Class
@@ -46,8 +47,8 @@ export class WindowManager {
                             state.cameras[viewId].aspect = viewElement.clientWidth / viewElement.clientHeight;
                             state.cameras[viewId].updateProjectionMatrix();
                         } else {
-                            // Import update2DCameras function when needed
-                            window.update2DCameras && window.update2DCameras();
+                            // Update 2D cameras for orthographic projection
+                            update2DCameras();
                         }
                     }
                     

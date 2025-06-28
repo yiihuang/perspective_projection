@@ -2,98 +2,14 @@
 import { config } from '../config.js';
 import { state, getImagePlaneZ } from '../state.js';
 import { createLinear2DBoundary, createHemi2DBoundary } from './scene-manager.js';
-import { safeDispose } from '../utils/three-utils.js';
+import { safeDispose, createHemisphere } from '../utils/three-utils.js';
 
 export function createSceneObjects() {
-    // Create cube (shared across 3D scenes)
-    const cubeGeometry = new THREE.BoxGeometry(config.CUBE_SIZE, config.CUBE_SIZE, config.CUBE_SIZE);
-    const cubeMaterial = new THREE.MeshPhongMaterial({ 
-        color: config.COLORS.cube, 
-        opacity: 0.75, 
-        transparent: true 
-    });
-    state.cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    state.cube.position.z = -5;
+    // Step 2: Create shared objects in master scene instead of duplicating
+    createSharedObjectsInMasterScene();
     
-    const edges = new THREE.EdgesGeometry(cubeGeometry);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: config.COLORS.cubeEdges });
-    const cubeEdges = new THREE.LineSegments(edges, lineMaterial);
-    state.cube.add(cubeEdges);
-    
-    // Add cube to 3D scenes
-    state.scenes.linear3D.add(state.cube.clone());
-    state.scenes.hemi3D.add(state.cube.clone());
-    
-    // Create viewpoint sphere (shared)
-    const viewpointGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-    const viewpointMaterial = new THREE.MeshBasicMaterial({ color: config.COLORS.viewpoint });
-    state.viewpointSphere = new THREE.Mesh(viewpointGeometry, viewpointMaterial);
-    state.viewpointSphere.position.copy(state.viewpointPosition);
-    
-    const viewpointSphere1 = state.viewpointSphere.clone();
-    const viewpointSphere2 = state.viewpointSphere.clone();
-    viewpointSphere1.position.copy(state.viewpointPosition);
-    viewpointSphere2.position.copy(state.viewpointPosition);
-    
-    state.scenes.linear3D.add(viewpointSphere1);
-    state.scenes.hemi3D.add(viewpointSphere2);
-    
-    // Create image plane for linear perspective (size will be updated dynamically)
-    const planeSize = 2 * state.hemisphereRadius;
-    const planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize);
-    const planeMaterial = new THREE.MeshBasicMaterial({ 
-        color: config.COLORS.imagePlane, 
-        transparent: true, 
-        opacity: 0.1, 
-        side: THREE.DoubleSide 
-    });
-    state.imagePlane = new THREE.Mesh(planeGeometry, planeMaterial);
-    state.imagePlane.position.set(
-        state.viewpointPosition.x, 
-        state.viewpointPosition.y, 
-        getImagePlaneZ()
-    );
-    
-    const planeEdges = new THREE.EdgesGeometry(planeGeometry);
-    const planeEdgesMaterial = new THREE.LineBasicMaterial({ 
-        color: config.COLORS.imagePlane, 
-        opacity: 0.5 
-    });
-    const planeBorder = new THREE.LineSegments(planeEdges, planeEdgesMaterial);
-    state.imagePlane.add(planeBorder);
-    state.scenes.linear3D.add(state.imagePlane);
-    
-    // Create hemisphere for hemispherical perspective
-    const hemisphereGeometry = new THREE.SphereGeometry(
-        state.hemisphereRadius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2
-    );
-    const hemisphereMaterial = new THREE.MeshBasicMaterial({ 
-        color: config.COLORS.hemisphere, 
-        transparent: true, 
-        opacity: 0.15, 
-        side: THREE.DoubleSide 
-    });
-    state.hemisphere = new THREE.Mesh(hemisphereGeometry, hemisphereMaterial);
-    state.hemisphere.position.copy(state.viewpointPosition);
-    state.hemisphere.rotation.x = -Math.PI / 2;
-    
-    const hemisphereWireframe = new THREE.WireframeGeometry(hemisphereGeometry);
-    const wireframeMaterial = new THREE.LineBasicMaterial({ 
-        color: config.COLORS.hemisphere, 
-        opacity: 0.3, 
-        transparent: true 
-    });
-    const hemisphereWire = new THREE.LineSegments(hemisphereWireframe, wireframeMaterial);
-    state.hemisphere.add(hemisphereWire);
-    state.scenes.hemi3D.add(state.hemisphere);
-    
-    // Add grid helpers
-    const gridHelper1 = new THREE.GridHelper(20, 20, 0xcccccc, 0xdddddd);
-    const gridHelper2 = new THREE.GridHelper(20, 20, 0xcccccc, 0xdddddd);
-    gridHelper1.position.y = -5;
-    gridHelper2.position.y = -5;
-    state.scenes.linear3D.add(gridHelper1);
-    state.scenes.hemi3D.add(gridHelper2);
+    // Step 3: Move projection surfaces to master scene with visibility control
+    createProjectionSurfacesInMasterScene();
     
     // Create 2D boundaries
     createLinear2DBoundary();
@@ -125,4 +41,97 @@ export function createSceneObjects() {
         imagePlane: state.imagePlane,
         hemisphere: state.hemisphere
     };
+}
+
+/**
+ * Step 2: Create Shared Objects in Master Scene
+ * Creates cube, viewpoint sphere, and grid helper once in the master scene
+ */
+function createSharedObjectsInMasterScene() {
+    if (!state.master3D) {
+        console.warn('Master 3D scene not initialized yet');
+        return;
+    }
+    
+    // Create cube (single instance in master scene)
+    const cubeGeometry = new THREE.BoxGeometry(config.CUBE_SIZE, config.CUBE_SIZE, config.CUBE_SIZE);
+    const cubeMaterial = new THREE.MeshPhongMaterial({ 
+        color: config.COLORS.cube, 
+        opacity: 0.75, 
+        transparent: true 
+    });
+    state.cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    state.cube.position.z = -5;
+    
+    const edges = new THREE.EdgesGeometry(cubeGeometry);
+    const lineMaterial = new THREE.LineBasicMaterial({ color: config.COLORS.cubeEdges });
+    const cubeEdges = new THREE.LineSegments(edges, lineMaterial);
+    state.cube.add(cubeEdges);
+    
+    // Add cube to master scene only
+    state.master3D.add(state.cube);
+    
+    // Create viewpoint sphere (single instance in master scene)
+    const viewpointGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+    const viewpointMaterial = new THREE.MeshBasicMaterial({ color: config.COLORS.viewpoint });
+    state.viewpointSphere = new THREE.Mesh(viewpointGeometry, viewpointMaterial);
+    state.viewpointSphere.position.copy(state.viewpointPosition);
+    
+    // Add viewpoint sphere to master scene only
+    state.master3D.add(state.viewpointSphere);
+    
+    // Add grid helper (single instance in master scene)
+    const gridHelper = new THREE.GridHelper(20, 20, 0xcccccc, 0xdddddd);
+    gridHelper.position.y = -5;
+    state.master3D.add(gridHelper);
+    
+    console.log('✅ Shared objects created in master scene (Step 2)');
+}
+
+/**
+ * Step 3: Move Projection Surfaces to Master Scene with Visibility Control
+ * Adds imagePlane and hemisphere to master scene with visibility control
+ */
+function createProjectionSurfacesInMasterScene() {
+    if (!state.master3D) {
+        console.warn('Master 3D scene not initialized yet');
+        return;
+    }
+    
+    // Create image plane for master scene (actual state object, not copy)
+    const planeSize = 2 * state.hemisphereRadius;
+    const planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize);
+    const planeMaterial = new THREE.MeshBasicMaterial({ 
+        color: config.COLORS.imagePlane, 
+        transparent: true, 
+        opacity: 0.1, 
+        side: THREE.DoubleSide 
+    });
+    state.imagePlane = new THREE.Mesh(planeGeometry, planeMaterial);
+    state.imagePlane.position.set(
+        state.viewpointPosition.x, 
+        state.viewpointPosition.y, 
+        getImagePlaneZ()
+    );
+    
+    const planeEdges = new THREE.EdgesGeometry(planeGeometry);
+    const planeEdgesMaterial = new THREE.LineBasicMaterial({ 
+        color: config.COLORS.imagePlane, 
+        opacity: 0.5 
+    });
+    const planeBorder = new THREE.LineSegments(planeEdges, planeEdgesMaterial);
+    state.imagePlane.add(planeBorder);
+    
+    // Create hemisphere for master scene (actual state object, not copy)
+    state.hemisphere = createHemisphere(state.hemisphereRadius, state.viewpointPosition);
+    
+    // Add both surfaces to master scene with initial visibility settings
+    state.master3D.add(state.imagePlane);
+    state.master3D.add(state.hemisphere);
+    
+    // Initially hide both - visibility will be controlled per viewport
+    state.imagePlane.visible = false;
+    state.hemisphere.visible = false;
+    
+    console.log('✅ Projection surfaces moved to master scene with visibility control (Step 3)');
 } 
