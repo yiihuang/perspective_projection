@@ -136,31 +136,34 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
         
         const hemisphereIntersection = intersectRayWithHemisphere(state.viewpointPosition, rayDirection, hemisphereCenter, state.hemisphereRadius);
         if (hemisphereIntersection) {
-            if (state.showIntersectionRays) {
-                // Complementary ray system (green + red segments to avoid overlap)
-                // Green ray: viewpoint → hemisphere intersection (bright, thick)
-                const greenRay = new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, hemisphereIntersection]), 
-                    RAY_MATERIALS.GREEN_INTERSECTION
-                );
-                state.groups.master3D.projectionLines.add(greenRay);
-                
-                // Red ray: hemisphere intersection → extended point (complementary segment)
-                const extendedPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
-                const redRay = new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([hemisphereIntersection, extendedPoint]), 
-                    RAY_MATERIALS.RED_COMPLEMENT_HEMI
-                );
-                state.groups.master3D.projectionLines.add(redRay);
-            } else {
-                // Full red rays only (viewpoint → extended points, thicker and more opaque)
-                const extendedPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
-                const redRay = new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, extendedPoint]), 
-                    RAY_MATERIALS.RED_EXTENDED
-                );
-                state.groups.master3D.projectionLines.add(redRay);
+            if (state.showRedRays) {
+                if (state.showIntersectionRays) {
+                    // Complementary ray system (green + red segments to avoid overlap)
+                    // Green ray: viewpoint → hemisphere intersection (bright, thick)
+                    const greenRay = new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, hemisphereIntersection]), 
+                        RAY_MATERIALS.GREEN_INTERSECTION
+                    );
+                    state.groups.master3D.projectionLines.add(greenRay);
+                    
+                    // Red ray: hemisphere intersection → extended point (complementary segment)
+                    const extendedPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
+                    const redRay = new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([hemisphereIntersection, extendedPoint]), 
+                        RAY_MATERIALS.RED_COMPLEMENT_HEMI
+                    );
+                    state.groups.master3D.projectionLines.add(redRay);
+                } else {
+                    // Full red rays only (viewpoint → extended points, thicker and more opaque)
+                    const extendedPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
+                    const redRay = new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, extendedPoint]), 
+                        RAY_MATERIALS.RED_EXTENDED
+                    );
+                    state.groups.master3D.projectionLines.add(redRay);
+                }
             }
+            // If showRedRays is false, no rays are drawn at all
             
             const projected2D = postelProjection(hemisphereIntersection, hemisphereCenter, state.hemisphereRadius);
             projectedVertices.push(projected2D);

@@ -21,7 +21,11 @@ export class ProjectionManager {
     }
 
     generateUpdateHash() {
-        return `${state.viewpointPosition.x},${state.viewpointPosition.y},${state.viewpointPosition.z},${state.hemisphereRadius},${state.cubeLocalRotation.x},${state.cubeLocalRotation.y},${state.cubeLocalRotation.z},${state.showIntersectionRays}`;
+        const rotationData = state.rotationMode === 'local' 
+            ? `${state.cubeLocalRotation.x},${state.cubeLocalRotation.y},${state.cubeLocalRotation.z}`
+            : `${state.cubeEulerAngles.alpha},${state.cubeEulerAngles.beta},${state.cubeEulerAngles.gamma}`;
+        
+        return `${state.viewpointPosition.x},${state.viewpointPosition.y},${state.viewpointPosition.z},${state.hemisphereRadius},${rotationData},${state.rotationMode},${state.showIntersectionRays},${state.showRedRays}`;
     }
 
     updateProjections(scenes, groups, cube, viewpointSphere, imagePlane, hemisphere) {

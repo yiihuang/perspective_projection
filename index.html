@@ -107,13 +107,31 @@
                     <input type="number" id="hemisphereRadius-number" min="1" max="15" value="6" step="0.1">
                 </div>
             </div>
-            <div class="slider-container">
-                <label for="cubeRotX">Cube Rot X</label>
-                <div class="slider-row">
-                    <input type="range" id="cubeRotX" min="-180" max="180" value="0" step="1">
-                    <input type="number" id="cubeRotX-number" min="-180" max="180" value="0" step="1">
+            <!-- Rotation Mode Toggle -->
+            <div class="mode-toggle-container">
+                <label class="mode-toggle-label">Rotation Mode</label>
+                <div class="mode-toggle-buttons">
+                    <button type="button" id="local-mode-btn" class="mode-btn active">Local Rotation</button>
+                    <button type="button" id="precise-mode-btn" class="mode-btn">Precise Orientation</button>
+                </div>
+                <div class="help-text">Local: Relative adjustments | Precise: Absolute orientation</div>
+                
+                <!-- Reset Button -->
+                <div class="reset-button-container">
+                    <button type="button" id="reset-rotation-btn" class="reset-btn">🔄 Reset Rotation</button>
+                    <div class="help-text">Reset cube to identity orientation (0°, 0°, 0°)</div>
                 </div>
             </div>
+
+            <!-- Local Rotation Controls (existing) -->
+            <div id="local-rotation-section">
+                <div class="slider-container">
+                    <label for="cubeRotX">Cube Rot X</label>
+                    <div class="slider-row">
+                        <input type="range" id="cubeRotX" min="-180" max="180" value="0" step="1">
+                        <input type="number" id="cubeRotX-number" min="-180" max="180" value="0" step="1">
+                    </div>
+                </div>
             <div class="slider-container">
                 <label for="cubeRotY">Cube Rot Y</label>
                 <div class="slider-row">
@@ -128,6 +146,35 @@
                     <input type="number" id="cubeRotZ-number" min="-180" max="180" value="0" step="1">
                 </div>
             </div>
+            </div>
+
+            <!-- Precise Orientation Controls (zx'z'' Euler angles) -->
+            <div id="precise-orientation-section" style="display: none;">
+                <div class="slider-container">
+                    <label for="eulerAlpha">Alpha (α) - First Z rotation</label>
+                    <div class="slider-row">
+                        <input type="range" id="eulerAlpha" min="-180" max="180" value="0" step="1">
+                        <input type="number" id="eulerAlpha-number" min="-180" max="180" value="0" step="1">
+                    </div>
+                    <div class="help-text">Rotation around initial local Z-axis</div>
+                </div>
+                <div class="slider-container">
+                    <label for="eulerBeta">Beta (β) - X rotation</label>
+                    <div class="slider-row">
+                        <input type="range" id="eulerBeta" min="-180" max="180" value="0" step="1">
+                        <input type="number" id="eulerBeta-number" min="-180" max="180" value="0" step="1">
+                    </div>
+                    <div class="help-text">Rotation around new local X-axis</div>
+                </div>
+                <div class="slider-container">
+                    <label for="eulerGamma">Gamma (γ) - Final Z rotation</label>
+                    <div class="slider-row">
+                        <input type="range" id="eulerGamma" min="-180" max="180" value="0" step="1">
+                        <input type="number" id="eulerGamma-number" min="-180" max="180" value="0" step="1">
+                    </div>
+                    <div class="help-text">Rotation around final local Z-axis</div>
+                </div>
+            </div>
             <div class="slider-container">
                 <label for="zoom3D">3D Zoom</label>
                 <div class="slider-row">
@@ -139,10 +186,17 @@
             <!-- Ray Visualization Controls -->
             <div class="slider-container">
                 <label class="checkbox-label">
+                    <input type="checkbox" id="show-red-rays" checked>
+                    <span class="checkbox-text">Show Red Rays</span>
+                </label>
+                <div class="help-text">Master control: turn off to hide all rays</div>
+            </div>
+            <div class="slider-container">
+                <label class="checkbox-label">
                     <input type="checkbox" id="show-intersection-rays" checked>
                     <span class="checkbox-text">Show Intersection Rays</span>
                 </label>
-                <div class="help-text">Checked: Green + Red segmented rays<br>Unchecked: Full red rays</div>
+                <div class="help-text">Checked: Green + Red segmented rays<br>Unchecked: Full red rays only</div>
             </div>
         </div>
     </div>

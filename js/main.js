@@ -8,6 +8,7 @@ import { ProjectionManager } from './projections/projection-manager.js';
 import { MouseHandlers } from './events/mouse-handlers.js';
 import { Controls } from './ui/controls.js';
 import { Renderer } from './rendering/renderer.js';
+import { setPreciseOrientation, testEulerRotations, validateEulerAngles, synchronizeRotationState, resetCubeOrientation } from './utils/three-utils.js';
 
 // Global instances
 let projectionManager;
@@ -28,6 +29,13 @@ export function init() {
         // Store scene objects globally for access by other modules
         window.scenes = state.scenes;
         window.sceneObjects = sceneObjects;
+        
+        // Expose rotation functions globally for testing and debugging
+        window.setPreciseOrientation = setPreciseOrientation;
+        window.testEulerRotations = testEulerRotations;
+        window.validateEulerAngles = validateEulerAngles;
+        window.synchronizeRotationState = synchronizeRotationState;
+        window.resetCubeOrientation = resetCubeOrientation;
         
         // Initialize managers and handlers
         projectionManager = new ProjectionManager();

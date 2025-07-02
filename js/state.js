@@ -26,6 +26,9 @@ export const state = {
         config.DEFAULTS.viewpointPosition.z
     ),
     cubeLocalRotation: { ...config.DEFAULTS.cubeLocalRotation },
+    // Precise orientation using zx'z'' intrinsic Euler angles (in degrees)
+    cubeEulerAngles: { ...config.DEFAULTS.cubeEulerAngles },
+    rotationMode: config.DEFAULTS.rotationMode,
     zoomLevel2D: config.DEFAULTS.zoomLevel2D,
     zoom3D: config.DEFAULTS.zoom3D,
     
@@ -67,6 +70,7 @@ export const state = {
     
     // Ray visualization toggles
     showIntersectionRays: true,  // When true: complementary rays (green + red segments), when false: full red rays only
+    showRedRays: true,  // When showIntersectionRays is false, controls whether to show full red rays or no rays
     
     // Cached data for performance
     cachedWorldVertices: null,
@@ -99,12 +103,35 @@ export function getImagePlaneZ() {
     return state.viewpointPosition.z - state.hemisphereRadius;
 }
 
+// Rotation mode management
+export function setRotationMode(mode) {
+    if (mode !== 'local' && mode !== 'precise') {
+        console.warn(`Invalid rotation mode: ${mode}. Using 'local' instead.`);
+        mode = 'local';
+    }
+    state.rotationMode = mode;
+    console.log(`Rotation mode set to: ${mode}`);
+}
+
+export function isLocalRotationMode() {
+    return state.rotationMode === 'local';
+}
+
+export function isPreciseOrientationMode() {
+    return state.rotationMode === 'precise';
+}
+
 export function generateUpdateHash() {
     const pos = state.viewpointPosition;
     const rot = state.cube ? state.cube.rotation : { x: 0, y: 0, z: 0 };
     const cubePos = state.cube ? state.cube.position : { x: 0, y: 0, z: 0 };
     
-    return `${pos.x},${pos.y},${pos.z},${state.hemisphereRadius},${rot.x},${rot.y},${rot.z},${cubePos.x},${cubePos.y},${cubePos.z}`;
+    // Include rotation mode and appropriate rotation data
+    const rotationData = state.rotationMode === 'local' 
+        ? `${state.cubeLocalRotation.x},${state.cubeLocalRotation.y},${state.cubeLocalRotation.z}`
+        : `${state.cubeEulerAngles.alpha},${state.cubeEulerAngles.beta},${state.cubeEulerAngles.gamma}`;
+    
+    return `${pos.x},${pos.y},${pos.z},${state.hemisphereRadius},${rot.x},${rot.y},${rot.z},${cubePos.x},${cubePos.y},${cubePos.z},${rotationData},${state.rotationMode}`;
 }
 
 export function markViewportsDirty(updateType = 'all') {

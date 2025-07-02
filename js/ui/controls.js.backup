@@ -493,113 +493,191 @@ export class Controls {
 }
 
 function setupControlDragging() {
-    try {
-        controlsContainer = document.getElementById('controls-container');
-        const controlsToggle = document.getElementById('controls-toggle');
+    controlsContainer = document.getElementById('controls-container');
+    const controlsToggle = document.getElementById('controls-toggle');
+    
+    if (!controlsContainer || !controlsToggle) {
+        console.error('Controls container or toggle not found');
+        return;
+    }
+    
+    // Make the toggle button draggable
+    controlsContainer.classList.add('controls-draggable');
+    
+    // Mouse down event - start dragging
+    controlsToggle.addEventListener('mousedown', (e) => {
+        // Don't start drag if it's a right click or if already dragging
+        if (e.button !== 0 || isDragging) return;
         
-        if (!controlsContainer || !controlsToggle) {
-            console.error('Controls container or toggle not found');
+        isDragging = true;
+        hasDragged = false; // Reset drag tracking
+        
+        // Calculate offset from mouse to top-left of container
+        const rect = controlsContainer.getBoundingClientRect();
+        dragOffset.x = e.clientX - rect.left;
+        dragOffset.y = e.clientY - rect.top;
+        
+        // Add visual feedback for dragging
+        controlsContainer.classList.add('controls-dragging');
+        
+        // Prevent text selection and other default behaviors
+        e.preventDefault();
+        
+        console.log('Drag started');
+    });
+    
+    // Double-click to reset position
+    controlsToggle.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Reset to original position
+        controlsContainer.style.left = 'auto';
+        controlsContainer.style.top = '20px';
+        controlsContainer.style.right = '20px';
+        
+        console.log('Controls position reset to default');
+    });
+    
+    // Mouse move event - handle dragging
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        hasDragged = true; // Mark that we've actually dragged
+        
+        // Calculate new position
+        let newLeft = e.clientX - dragOffset.x;
+        let newTop = e.clientY - dragOffset.y;
+        
+        // Get window dimensions and container dimensions
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const containerRect = controlsContainer.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        // Define minimum visible area (at least 50px should remain visible)
+        const minVisible = 50;
+        
+        // Apply bounds checking
+        newLeft = Math.max(-containerWidth + minVisible, Math.min(windowWidth - minVisible, newLeft));
+        newTop = Math.max(-containerHeight + minVisible, Math.min(windowHeight - minVisible, newTop));
+        
+        // Apply new position
+        controlsContainer.style.left = newLeft + 'px';
+        controlsContainer.style.top = newTop + 'px';
+        controlsContainer.style.right = 'auto'; // Override fixed right positioning
+        
+        e.preventDefault();
+    });
+    
+    // Mouse up event - stop dragging
+    document.addEventListener('mouseup', (e) => {
+        if (isDragging) {
+            isDragging = false;
+            
+            // Remove visual feedback
+            controlsContainer.classList.remove('controls-dragging');
+            
+            console.log('Drag ended');
+        }
+    });
+    
+    // Escape key to cancel dragging
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isDragging) {
+            isDragging = false;
+            hasDragged = false;
+            
+            // Remove visual feedback
+            controlsContainer.classList.remove('controls-dragging');
+            
+            console.log('Drag cancelled with Escape key');
+        }
+    });
+    
+    // Touch support for mobile devices
+    controlsToggle.addEventListener('touchstart', (e) => {
+        if (isDragging) return;
+        
+        const touch = e.touches[0];
+        isDragging = true;
+        hasDragged = false;
+        
+        const rect = controlsContainer.getBoundingClientRect();
+        dragOffset.x = touch.clientX - rect.left;
+        dragOffset.y = touch.clientY - rect.top;
+        
+        controlsContainer.classList.add('controls-dragging');
+        
+        e.preventDefault();
+        console.log('Touch drag started');
+    });
+    
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        hasDragged = true;
+        const touch = e.touches[0];
+        
+        let newLeft = touch.clientX - dragOffset.x;
+        let newTop = touch.clientY - dragOffset.y;
+        
+        // Apply same bounds checking as mouse
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const containerRect = controlsContainer.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        const minVisible = 50;
+        
+        newLeft = Math.max(-containerWidth + minVisible, Math.min(windowWidth - minVisible, newLeft));
+        newTop = Math.max(-containerHeight + minVisible, Math.min(windowHeight - minVisible, newTop));
+        
+        controlsContainer.style.left = newLeft + 'px';
+        controlsContainer.style.top = newTop + 'px';
+        controlsContainer.style.right = 'auto';
+        
+        e.preventDefault();
+    });
+    
+    document.addEventListener('touchend', (e) => {
+        if (isDragging) {
+            isDragging = false;
+            controlsContainer.classList.remove('controls-dragging');
+            console.log('Touch drag ended');
+        }
+    });
+    
+    // Prevent dragging from interfering with controls toggle
+    controlsToggle.addEventListener('mouseup', (e) => {
+        if (isDragging) {
+            e.stopPropagation();
             return;
         }
+    });
+    
+    // Handle window resize to keep controls in bounds
+    window.addEventListener('resize', () => {
+        if (!controlsContainer) return;
         
-        // Make the toggle button draggable
-        controlsContainer.classList.add('controls-draggable');
+        const rect = controlsContainer.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const minVisible = 50;
         
-        // Mouse down event - start dragging
-        controlsToggle.addEventListener('mousedown', (e) => {
-            // Don't start drag if it's a right click or if already dragging
-            if (e.button !== 0 || isDragging) return;
-            
-            isDragging = true;
-            hasDragged = false; // Reset drag tracking
-            
-            // Calculate offset from mouse to top-left of container
-            const rect = controlsContainer.getBoundingClientRect();
-            dragOffset.x = e.clientX - rect.left;
-            dragOffset.y = e.clientY - rect.top;
-            
-            // Add visual feedback for dragging
-            controlsContainer.classList.add('controls-dragging');
-            
-            // Prevent text selection and other default behaviors
-            e.preventDefault();
-            
-            console.log('Drag started');
-        });
+        // Check if controls are out of bounds
+        let newLeft = parseFloat(controlsContainer.style.left) || 0;
+        let newTop = parseFloat(controlsContainer.style.top) || 0;
         
-        // Double-click to reset position
-        controlsToggle.addEventListener('dblclick', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Reset to original position
-            controlsContainer.style.left = 'auto';
-            controlsContainer.style.top = '20px';
-            controlsContainer.style.right = '20px';
-            
-            console.log('Controls position reset to default');
-        });
+        // Apply bounds checking
+        newLeft = Math.max(-rect.width + minVisible, Math.min(windowWidth - minVisible, newLeft));
+        newTop = Math.max(-rect.height + minVisible, Math.min(windowHeight - minVisible, newTop));
         
-        // Mouse move event - handle dragging
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            
-            hasDragged = true; // Mark that we've actually dragged
-            
-            // Calculate new position
-            let newLeft = e.clientX - dragOffset.x;
-            let newTop = e.clientY - dragOffset.y;
-            
-            // Get window dimensions and container dimensions
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            const containerRect = controlsContainer.getBoundingClientRect();
-            const containerWidth = containerRect.width;
-            const containerHeight = containerRect.height;
-            
-            // Define minimum visible area (at least 50px should remain visible)
-            const minVisible = 50;
-            
-            // Apply bounds checking
-            newLeft = Math.max(-containerWidth + minVisible, Math.min(windowWidth - minVisible, newLeft));
-            newTop = Math.max(-containerHeight + minVisible, Math.min(windowHeight - minVisible, newTop));
-            
-            // Apply new position
-            controlsContainer.style.left = newLeft + 'px';
-            controlsContainer.style.top = newTop + 'px';
-            controlsContainer.style.right = 'auto'; // Override fixed right positioning
-            
-            e.preventDefault();
-        });
-        
-        // Mouse up event - stop dragging
-        document.addEventListener('mouseup', (e) => {
-            if (isDragging) {
-                isDragging = false;
-                
-                // Remove visual feedback
-                controlsContainer.classList.remove('controls-dragging');
-                
-                console.log('Drag ended');
-            }
-        });
-        
-        // Escape key to cancel dragging
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isDragging) {
-                isDragging = false;
-                hasDragged = false;
-                
-                // Remove visual feedback
-                controlsContainer.classList.remove('controls-dragging');
-                
-                console.log('Drag cancelled with Escape key');
-            }
-        });
-        
-        console.log('Control dragging setup complete');
-        
-    } catch (error) {
-        console.error('Error setting up control dragging:', error);
-    }
+        // Update position if needed
+        controlsContainer.style.left = newLeft + 'px';
+        controlsContainer.style.top = newTop + 'px';
+    });
+    
+    console.log('Control dragging setup complete');
 } 

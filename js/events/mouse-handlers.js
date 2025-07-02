@@ -92,6 +92,11 @@ export class MouseHandlers {
 
     handleMouseMove(e) {
         if (this.dragState.isDraggingCube) {
+            // Only allow mouse cube rotation in local mode
+            if (state.rotationMode !== 'local') {
+                return; // Skip mouse rotation in precise mode
+            }
+            
             // Handle cube rotation (left click)
             const deltaX = e.clientX - this.dragState.previousMousePosition.x;
             const deltaY = e.clientY - this.dragState.previousMousePosition.y;
