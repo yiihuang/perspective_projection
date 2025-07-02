@@ -11,6 +11,8 @@ An interactive web application that visualizes the principles of **perspective p
 ### Option 1: Use the Live Demo (Recommended)
 Simply visit the live demo link above - no setup required!
 
+> 💡 **New Feature**: UI controls are now draggable! Look for the ⋮⋮ dots on the Controls button and drag to move the panel anywhere on screen.
+
 ### Option 2: Run Locally
 ```bash
 # Clone the repository
@@ -144,6 +146,18 @@ index.html (156 lines) - Clean entry point
 - **Bidirectional Sync**: Sliders and inputs update each other
 - **Value Validation**: Automatic clamping to valid ranges
 
+### Draggable UI Controls
+- **Smart Drag System**: Drag the Controls button (⋮⋮ indicator) to move the entire control panel
+- **Visual Feedback**: Semi-transparent appearance and scaling during drag operations
+- **Boundary Protection**: Controls stay partially visible (50px minimum) even at screen edges
+- **Click vs. Drag Detection**: Single clicks still toggle the panel, dragging moves position
+- **Advanced Features**:
+  - **Double-click Reset**: Double-click the Controls button to return to original position
+  - **Escape to Cancel**: Press Escape key during drag to cancel the operation
+  - **Window Resize Handling**: Controls automatically reposition if moved off-screen after window resize
+  - **Professional Animations**: Smooth transitions and hover effects
+- **Responsive Design**: Works on both desktop (mouse) and mobile (touch) devices
+
 ### Mouse Controls (Context-Sensitive)
 - **Left-drag in 3D views**: Rotate the shared cube (affects both viewports)
 - **Right-drag in 3D views**: Rotate the camera around the scene
@@ -244,6 +258,7 @@ For hemispherical perspective, straight lines become circular arcs determined by
 - **Centralized Ray Management**: Conflict-free ray visualization system
 - **Smart Visibility Control**: Dynamic projection surface switching
 - **Optimized Function Calls**: Streamlined parameter passing
+- **Draggable UI System**: Event-driven drag handling with bounds checking and visual feedback
 
 ### Performance Features
 - **Object Deduplication**: Single instances of all 3D objects
