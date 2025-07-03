@@ -19,15 +19,22 @@ export function intersectRayWithHemisphere(rayOrigin, rayDirection, hemisphereCe
     const t1 = (-b - Math.sqrt(discriminant)) / (2 * a);
     const t2 = (-b + Math.sqrt(discriminant)) / (2 * a);
     
+    // Choose the closest positive intersection (in the direction of the ray)
+    const validIntersections = [];
     for (let t of [t1, t2]) {
-        if (t > 0.001) {
+        if (t > 0.001) { // Ray parameter must be positive and not too close to origin
             const point = rayOrigin.clone().add(rayDirection.clone().multiplyScalar(t));
-            if (point.z <= hemisphereCenter.z) {
-                return point;
-            }
+            validIntersections.push({ t: t, point: point });
         }
     }
-    return null;
+    
+    if (validIntersections.length === 0) {
+        return null;
+    }
+    
+    // Return the closest intersection point
+    validIntersections.sort((a, b) => a.t - b.t);
+    return validIntersections[0].point;
 }
 
 export function postelProjection(point3D, hemisphereCenter, hemisphereRadius) {
@@ -176,6 +183,16 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
     const dirX = new THREE.Vector3().subVectors(worldVertices[1], worldVertices[0]);
     const dirY = new THREE.Vector3().subVectors(worldVertices[3], worldVertices[0]);
     const dirZ = new THREE.Vector3().subVectors(worldVertices[4], worldVertices[0]);
+    
+    // Auto-fix: If matrix determinant is far from 1.0, reset the rotation matrix
+    if (state.cube) {
+        const matrix = state.cube.matrixWorld;
+        const det = matrix.determinant();
+        if (Math.abs(det - 1.0) > 0.01) {
+            state.cube.matrix.makeRotationFromEuler(state.cube.rotation);
+            state.cube.updateMatrixWorld(true);
+        }
+    }
 
     const vanishingPointData = [
         { dir: dirX.normalize(), color: config.COLORS.vanishingPoint.red },
@@ -216,9 +233,7 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
 
     // Helper functions for arc drawing
     function getVanishingPointForEdge(v1Index, v2Index) {
-        const boundaryRadius = (Math.PI / 2) * state.hemisphereRadius;
         const edgeDirections = config.CUBE_MAPPINGS.edgeDirections;
-        
         const key = `${v1Index},${v2Index}`;
         let axisIndex = edgeDirections[key];
         if (axisIndex === undefined) return { vp: null, axisIndex: null };
@@ -226,11 +241,22 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
         const posVP = vanishingPoints[axisIndex * 2];
         const negVP = vanishingPoints[axisIndex * 2 + 1];
         
-        if (posVP && (posVP.x * posVP.x + posVP.y * posVP.y) <= boundaryRadius * boundaryRadius) {
-            return { vp: posVP, axisIndex: axisIndex };
+        // Use tolerance to handle floating-point precision errors during rotation
+        const vpTolerance = boundaryRadius * 0.001; // 0.1% tolerance
+        const vpBoundaryRadiusSquared = (boundaryRadius + vpTolerance) * (boundaryRadius + vpTolerance);
+        
+        if (posVP && isFinite(posVP.x) && isFinite(posVP.y)) {
+            const posDistSquared = posVP.x * posVP.x + posVP.y * posVP.y;
+            if (posDistSquared <= vpBoundaryRadiusSquared) {
+                return { vp: posVP, axisIndex: axisIndex };
+            }
         }
-        if (negVP && (negVP.x * negVP.x + negVP.y * negVP.y) <= boundaryRadius * boundaryRadius) {
-            return { vp: negVP, axisIndex: axisIndex };
+        
+        if (negVP && isFinite(negVP.x) && isFinite(negVP.y)) {
+            const negDistSquared = negVP.x * negVP.x + negVP.y * negVP.y;
+            if (negDistSquared <= vpBoundaryRadiusSquared) {
+                return { vp: negVP, axisIndex: axisIndex };
+            }
         }
         
         return { vp: null, axisIndex: axisIndex };
@@ -241,9 +267,28 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
         return colors[axisIndex];
     }
 
+    // Cache commonly used values
+    const boundaryRadius = (Math.PI / 2) * state.hemisphereRadius;
+    const tolerance = boundaryRadius * 0.01;
+    const boundaryRadiusSquared = boundaryRadius * boundaryRadius;
+
     // Draw projected cube edges as circular arcs
     const edges = config.CUBE_MAPPINGS.edges;
     const projectedLineMaterial = new THREE.LineBasicMaterial({ color: config.COLORS.cubeEdge, linewidth: 2 });
+    
+    // Pre-calculate degenerate status for each axis to avoid repeated calculations
+    const axisDegenerate = new Array(3);
+    for (let axisIndex = 0; axisIndex < 3; axisIndex++) {
+        const posVP = vanishingPoints[axisIndex * 2];
+        const negVP = vanishingPoints[axisIndex * 2 + 1];
+        
+        const isPosVPDegenerate = posVP && isFinite(posVP.x) && isFinite(posVP.y) && 
+            Math.abs(Math.sqrt(posVP.x * posVP.x + posVP.y * posVP.y) - boundaryRadius) < tolerance;
+        const isNegVPDegenerate = negVP && isFinite(negVP.x) && isFinite(negVP.y) && 
+            Math.abs(Math.sqrt(negVP.x * negVP.x + negVP.y * negVP.y) - boundaryRadius) < tolerance;
+            
+        axisDegenerate[axisIndex] = isPosVPDegenerate || isNegVPDegenerate;
+    }
     
     for (let i = 0; i < edges.length; i += 2) {
         const v1Index = edges[i];
@@ -258,7 +303,7 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
                 const arc = createCircularArc(p1, p2, vpResult.vp, projectedLineMaterial);
                 groups.hemi2D.projectedCubeLines.add(arc);
                 
-                // Draw guide lines
+                // Draw guide lines - check if we should extend this arc
                 const guideColor = getLighterColor(vpResult.axisIndex);
                 const guideMaterial = new THREE.LineBasicMaterial({ 
                     color: guideColor, 
@@ -267,11 +312,122 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
                     linewidth: 1
                 });
                 
-                const guide1 = createCircularArc(p1, vpResult.vp, p2, guideMaterial);
-                const guide2 = createCircularArc(p2, vpResult.vp, p1, guideMaterial);
-                
-                groups.hemi2D.projectedCubeLines.add(guide1);
-                groups.hemi2D.projectedCubeLines.add(guide2);
+                if (axisDegenerate[vpResult.axisIndex]) {
+                    // At least one vanishing point is degenerate - create extended guide arc for this edge
+                    const axisIndex = vpResult.axisIndex;
+                    const posVP = vanishingPoints[axisIndex * 2];
+                    const negVP = vanishingPoints[axisIndex * 2 + 1];
+                    
+                    // Calculate circle parameters using the same method as createCircularArc
+                    const ax = p1.x, ay = p1.y;
+                    const bx = p2.x, by = p2.y; 
+                    const cx = vpResult.vp.x, cy = vpResult.vp.y;
+                    
+                    const d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+                    
+                    if (Math.abs(d) > 0.0001) {
+                        const ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d;
+                        const uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d;
+                        
+                        const centerX = ux;
+                        const centerY = uy;
+                        const radius = Math.sqrt((ax - centerX) * (ax - centerX) + (ay - centerY) * (ay - centerY));
+                        
+                        // Create extended arc from posVP through edge to negVP
+                        const posVPAngle = Math.atan2(posVP.y - centerY, posVP.x - centerX);
+                        const negVPAngle = Math.atan2(negVP.y - centerY, negVP.x - centerX);
+                        const p1Angle = Math.atan2(p1.y - centerY, p1.x - centerX);
+                        const p2Angle = Math.atan2(p2.y - centerY, p2.x - centerX);
+                        
+                        // Function to normalize angle difference
+                        const angleDiff = (a2, a1) => {
+                            let diff = a2 - a1;
+                            while (diff > Math.PI) diff -= 2 * Math.PI;
+                            while (diff < -Math.PI) diff += 2 * Math.PI;
+                            return diff;
+                        };
+                        
+                        // Function to check if angle is between two other angles (going counterclockwise)
+                        const isAngleBetween = (angle, start, end) => {
+                            const startDiff = angleDiff(angle, start);
+                            const endDiff = angleDiff(end, start);
+                            return startDiff >= 0 && startDiff <= endDiff && endDiff > 0;
+                        };
+                        
+                        // Try both directions and pick the one where the edge vertices are between the vanishing points
+                        let startAngle, endAngle;
+                        
+                        // Direction 1: posVP -> negVP (counterclockwise)
+                        const diff1 = angleDiff(negVPAngle, posVPAngle);
+                        const p1Between1 = isAngleBetween(p1Angle, posVPAngle, negVPAngle);
+                        const p2Between1 = isAngleBetween(p2Angle, posVPAngle, negVPAngle);
+                        
+                        // Direction 2: negVP -> posVP (counterclockwise, which is the other direction)
+                        const diff2 = angleDiff(posVPAngle, negVPAngle);
+                        const p1Between2 = isAngleBetween(p1Angle, negVPAngle, posVPAngle);
+                        const p2Between2 = isAngleBetween(p2Angle, negVPAngle, posVPAngle);
+                        
+                        // Choose direction based on which has both edge vertices between vanishing points
+                        if ((p1Between1 && p2Between1) || (!p1Between2 && !p2Between2)) {
+                            startAngle = posVPAngle;
+                            endAngle = posVPAngle + diff1;
+                        } else {
+                            startAngle = negVPAngle;
+                            endAngle = negVPAngle + diff2;
+                        }
+                        
+                        // Generate arc points with boundary checking
+                        const segments = 64;
+                        const points = [];
+                        const boundaryCheck = boundaryRadius + 0.1; // Small tolerance
+                        
+                        for (let j = 0; j <= segments; j++) {
+                            const angle = startAngle + (endAngle - startAngle) * j / segments;
+                            const x = centerX + radius * Math.cos(angle);
+                            const y = centerY + radius * Math.sin(angle);
+                            
+                            // Optimized boundary check using squared distance
+                            if (x * x + y * y <= boundaryCheck * boundaryCheck) {
+                                points.push(new THREE.Vector3(x, y, 0));
+                            }
+                        }
+                        
+                        if (points.length > 2) {
+                            const extendedGuideArc = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), guideMaterial);
+                            groups.hemi2D.projectedCubeLines.add(extendedGuideArc);
+                        }
+                    } else {
+                        // Fallback: Create a direct line arc between the vanishing points
+                        // This handles the special case where edge and vanishing points are collinear
+                        const points = [];
+                        const segments = 64;
+                        const boundaryCheck = boundaryRadius + 0.1; // Small tolerance
+                        const boundaryCheckSquared = boundaryCheck * boundaryCheck;
+                        
+                        for (let j = 0; j <= segments; j++) {
+                            const t = j / segments;
+                            const x = negVP.x + t * (posVP.x - negVP.x);
+                            const y = negVP.y + t * (posVP.y - negVP.y);
+                            
+                            // Optimized boundary check using squared distance
+                            if (x * x + y * y <= boundaryCheckSquared) {
+                                points.push(new THREE.Vector3(x, y, 0));
+                            }
+                        }
+                        
+                        if (points.length > 2) {
+                            const extendedGuideArc = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), guideMaterial);
+                            groups.hemi2D.projectedCubeLines.add(extendedGuideArc);
+                        }
+                    }
+                } else {
+                    // Standard guide arcs (existing behavior)
+                    const guide1 = createCircularArc(p1, vpResult.vp, p2, guideMaterial);
+                    const guide2 = createCircularArc(p2, vpResult.vp, p1, guideMaterial);
+                    
+                    groups.hemi2D.projectedCubeLines.add(guide1);
+                    groups.hemi2D.projectedCubeLines.add(guide2);
+                }
             } else {
                 const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
                     new THREE.Vector3(p1.x, p1.y, 0),
