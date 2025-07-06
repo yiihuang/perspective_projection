@@ -60,6 +60,10 @@ export class Controls {
 
     setupControls() {
         // Slider controls (fixed setup)
+        this.setupSliderControl('viewpointX', (value) => {
+            state.viewpointPosition.x = value;
+        });
+        
         this.setupSliderControl('viewpointY', (value) => {
             state.viewpointPosition.y = value;
         });
@@ -101,41 +105,15 @@ export class Controls {
             });
         });
 
-        // Red rays toggle (master control)
+        // Red rays toggle
         this.setupCheckboxControl('show-red-rays', (checked) => {
             state.showRedRays = checked;
-            this.updateIntersectionRaysControlState();
         });
-        
-        // Intersection rays toggle (only enabled when red rays are on)
-        this.setupCheckboxControl('show-intersection-rays', (checked) => {
-            state.showIntersectionRays = checked;
-        });
-        
-        // Initialize the intersection rays control state
-        this.updateIntersectionRaysControlState();
 
         setupControlDragging();
     }
 
-    updateIntersectionRaysControlState() {
-        const intersectionRaysCheckbox = document.getElementById('show-intersection-rays');
-        const intersectionRaysContainer = intersectionRaysCheckbox?.closest('.slider-container');
-        
-        if (intersectionRaysCheckbox && intersectionRaysContainer) {
-            if (state.showRedRays) {
-                // When red rays are ON, enable the intersection rays control
-                intersectionRaysCheckbox.disabled = false;
-                intersectionRaysContainer.style.opacity = '1';
-                intersectionRaysContainer.style.pointerEvents = 'auto';
-            } else {
-                // When red rays are OFF, disable and gray out the intersection rays control
-                intersectionRaysCheckbox.disabled = true;
-                intersectionRaysContainer.style.opacity = '0.5';
-                intersectionRaysContainer.style.pointerEvents = 'none';
-            }
-        }
-    }
+
 
     setupSliderControl(elementId, updateCallback) {
         const slider = document.getElementById(elementId);

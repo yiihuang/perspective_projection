@@ -87,24 +87,31 @@
         <button id="controls-toggle">Controls</button>
         <div id="controls">
             <div class="slider-container">
+                <label for="viewpointX">Viewpoint X</label>
+                <div class="slider-row">
+                    <input type="range" id="viewpointX" min="-10" max="10" value="0" step="0.1">
+                    <input type="number" id="viewpointX-number" min="-10" max="10" value="0" step="0.1">
+                </div>
+            </div>
+            <div class="slider-container">
                 <label for="viewpointY">Viewpoint Y</label>
                 <div class="slider-row">
-                    <input type="range" id="viewpointY" min="-10" max="10" value="2" step="0.1">
-                    <input type="number" id="viewpointY-number" min="-10" max="10" value="2" step="0.1">
+                    <input type="range" id="viewpointY" min="-10" max="10" value="0" step="0.1">
+                    <input type="number" id="viewpointY-number" min="-10" max="10" value="0" step="0.1">
                 </div>
             </div>
             <div class="slider-container">
                 <label for="viewpointZ">Viewpoint Z</label>
                 <div class="slider-row">
-                    <input type="range" id="viewpointZ" min="3" max="20" value="8" step="0.1">
-                    <input type="number" id="viewpointZ-number" min="3" max="20" value="8" step="0.1">
+                    <input type="range" id="viewpointZ" min="0" max="20" value="5" step="0.1">
+                    <input type="number" id="viewpointZ-number" min="0" max="20" value="5" step="0.1">
                 </div>
             </div>
             <div class="slider-container">
                 <label for="hemisphereRadius">Radius R (Both)</label>
                 <div class="slider-row">
-                    <input type="range" id="hemisphereRadius" min="1" max="15" value="6" step="0.1">
-                    <input type="number" id="hemisphereRadius-number" min="1" max="15" value="6" step="0.1">
+                    <input type="range" id="hemisphereRadius" min="1" max="15" value="5" step="0.1">
+                    <input type="number" id="hemisphereRadius-number" min="1" max="15" value="5" step="0.1">
                 </div>
             </div>
             <!-- Rotation Mode Toggle -->
@@ -189,14 +196,7 @@
                     <input type="checkbox" id="show-red-rays" checked>
                     <span class="checkbox-text">Show Red Rays</span>
                 </label>
-                <div class="help-text">Master control: turn off to hide all rays</div>
-            </div>
-            <div class="slider-container">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="show-intersection-rays" checked>
-                    <span class="checkbox-text">Show Intersection Rays</span>
-                </label>
-                <div class="help-text">Checked: Green + Red segmented rays<br>Unchecked: Full red rays only</div>
+                <div class="help-text">Toggle to show/hide projection rays</div>
             </div>
         </div>
     </div>

@@ -90,59 +90,33 @@ export function updateLinearProjection(scenes, groups, imagePlane) {
         }
     });
 
-    // Add ray visualization based on toggle state (showRedRays is master control)
+    // Add ray visualization (full red rays only)
     worldVertices.forEach(worldVertex => {
         if (state.showRedRays) {
-            if (state.showIntersectionRays) {
-                // Complementary ray system (green + red segments to avoid overlap)
-                const rayDirection = worldVertex.clone().sub(state.viewpointPosition);
-                
-                // Calculate intersection with image plane
-                if (Math.abs(rayDirection.z) > 0.0001) { // Avoid division by zero
-                    const t = (currentImagePlaneZ - state.viewpointPosition.z) / rayDirection.z;
-                    
-                    // Only draw rays if intersection is between viewpoint and vertex (t > 0)
-                    if (t > 0) {
-                        const intersection = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(t));
-                        
-                        // Green ray: viewpoint → image plane intersection (bright, thick)
-                        const greenRay = new THREE.Line(
-                            new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, intersection]), 
-                            RAY_MATERIALS.GREEN_INTERSECTION
-                        );
-                        state.groups.master3D.projectionLines.add(greenRay);
-                        
-                        // Red ray: image plane intersection → cube vertex (complementary segment)
-                        const redRay = new THREE.Line(
-                            new THREE.BufferGeometry().setFromPoints([intersection, worldVertex]), 
-                            RAY_MATERIALS.RED_COMPLEMENT
-                        );
-                        state.groups.master3D.projectionLines.add(redRay);
-                    }
-                }
-            } else {
-                // Full red rays only (viewpoint → cube vertices, thicker and more opaque)
-                const redRay = new THREE.Line(
-                    new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, worldVertex]), 
-                    RAY_MATERIALS.RED_FULL
-                );
-                state.groups.master3D.projectionLines.add(redRay);
-            }
+            // Full red rays (viewpoint → cube vertices)
+            const redRay = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, worldVertex]), 
+                RAY_MATERIALS.RED_FULL
+            );
+            state.groups.master3D.projectionLines.add(redRay);
         }
         // If showRedRays is false, no rays are drawn at all
     });
 
     // Draw projected cube edges
     const edges = config.CUBE_MAPPINGS.edges;
-    const projectedLineMaterial = createMaterial('LineBasicMaterial');
+    const edgeMaterial = new THREE.LineBasicMaterial({ 
+        color: config.COLORS.cubeEdge, // Use same color as hemispherical projection
+        linewidth: 3 // Make edges thicker to ensure they're visible on top
+    });
     for (let i = 0; i < edges.length; i += 2) {
         const p1 = projectedVertices[edges[i]];
         const p2 = projectedVertices[edges[i+1]];
         if (isFinite(p1.x) && isFinite(p1.y) && isFinite(p2.x) && isFinite(p2.y)) {
             const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(p1.x, p1.y, 0),
-                new THREE.Vector3(p2.x, p2.y, 0)
-            ]), projectedLineMaterial);
+                new THREE.Vector3(p1.x, p1.y, 0.2), // Higher z-index to render on top
+                new THREE.Vector3(p2.x, p2.y, 0.2)
+            ]), edgeMaterial);
             groups.linear2D.projectedCubeLines.add(line);
         }
     }

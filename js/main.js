@@ -17,6 +17,8 @@ let mouseHandlers;
 let controls;
 let renderer;
 
+
+
 // Initialize the application
 export function init() {
     console.log('Initializing Perspective Visualization...');
@@ -36,6 +38,8 @@ export function init() {
         window.validateEulerAngles = validateEulerAngles;
         window.synchronizeRotationState = synchronizeRotationState;
         window.resetCubeOrientation = resetCubeOrientation;
+        
+
         
         // Initialize managers and handlers
         projectionManager = new ProjectionManager();

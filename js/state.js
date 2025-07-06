@@ -69,8 +69,7 @@ export const state = {
     },
     
     // Ray visualization toggles
-    showIntersectionRays: true,  // When true: complementary rays (green + red segments), when false: full red rays only
-    showRedRays: true,  // When showIntersectionRays is false, controls whether to show full red rays or no rays
+    showRedRays: true,  // Controls whether to show full red rays
     
     // Cached data for performance
     cachedWorldVertices: null,

@@ -5,8 +5,8 @@ export const config = {
     
     // Default values
     DEFAULTS: {
-        hemisphereRadius: 6,
-        viewpointPosition: { x: 0, y: 2, z: 8 },
+        hemisphereRadius: 5,
+        viewpointPosition: { x: 0, y: 0, z: 5 },
         cubeLocalRotation: { x: 0, y: 0, z: 0 },
         // Precise orientation using zx'z'' intrinsic Euler angles (in degrees)
         cubeEulerAngles: { alpha: 0, beta: 0, gamma: 0 },
@@ -48,9 +48,9 @@ export const config = {
             blue: 0x0074d9
         },
         guide: {
-            red: 0xffaaaa,
-            green: 0xaaffaa,
-            blue: 0xaaaaff
+            red: 0xFF8282,
+            green: 0x71C0BB,
+            blue: 0x63C8FF
         },
         vanishingPoints: {
             x: 0xff4136,
@@ -58,9 +58,9 @@ export const config = {
             z: 0x0074d9
         },
         guideLines: {
-            x: 0xffaaaa,
-            y: 0xaaffaa,
-            z: 0xaaaaff
+            x: 0xFF8282,
+            y: 0x71C0BB,
+            z: 0x63C8FF
         }
     },
 

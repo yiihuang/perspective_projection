@@ -61,22 +61,6 @@ export function createMaterial(type, options = {}) {
  * Pre-created materials to eliminate duplication across projection files
  */
 export const RAY_MATERIALS = {
-    // Green intersection rays (viewpoint → projection surface)
-    GREEN_INTERSECTION: new THREE.LineBasicMaterial({ 
-        color: 0x00ff00, 
-        opacity: 0.9,
-        transparent: true,
-        linewidth: 3
-    }),
-    
-    // Red complement rays (projection surface → target, for complementary system)
-    RED_COMPLEMENT: new THREE.LineBasicMaterial({ 
-        color: 0xff3333, 
-        opacity: 0.7,
-        transparent: true,
-        linewidth: 2
-    }),
-    
     // Red full rays (viewpoint → target, for single ray system)
     RED_FULL: new THREE.LineBasicMaterial({ 
         color: 0xff3333, 
@@ -91,14 +75,6 @@ export const RAY_MATERIALS = {
         opacity: 0.7,
         transparent: true,
         linewidth: 3
-    }),
-    
-    // Red complement hemispherical (hemisphere intersection → extended point)
-    RED_COMPLEMENT_HEMI: new THREE.LineBasicMaterial({ 
-        color: 0xff3333, 
-        opacity: 0.6,
-        transparent: true,
-        linewidth: 2
     })
 };
 
@@ -144,45 +120,7 @@ export function getCachedWorldVertices(cube) {
     return state.cachedWorldVertices;
 } 
 
-export function updateShared3DScene(sceneId, scene, groups, cube, viewpointSphere, options = {}) {
-    // Update common objects that appear in both 3D scenes
-    updateCubeInScene(sceneId, cube, scene);
-    updateViewpointInScene(sceneId, state.viewpointPosition, scene);
-    
-    // Only clear projection lines if not using custom ray handling
-    // (When using custom ray handling, projections manage their own clearing)
-    if (!options.customRayHandling) {
-        clearGroup(groups.projectionLines);
-    }
-    
-    // Get world vertices for ray drawing
-    const worldVertices = getCachedWorldVertices(cube);
-    
-    // Draw projection rays only if not using custom ray handling
-    if (!options.customRayHandling) {
-        worldVertices.forEach(worldVertex => {
-            const lineMat = createMaterial('ProjectionLineMaterial', options.rayMaterial || {});
-            
-            let endPoint;
-            if (options.extendedRays) {
-                // Extended rays (hemispherical style)
-                const rayDirection = worldVertex.clone().sub(state.viewpointPosition).normalize();
-                endPoint = state.viewpointPosition.clone().add(rayDirection.clone().multiplyScalar(30));
-            } else {
-                // Short rays (linear style)
-                endPoint = worldVertex;
-            }
-            
-            const ray = new THREE.Line(
-                new THREE.BufferGeometry().setFromPoints([state.viewpointPosition, endPoint]), 
-                lineMat
-            );
-            groups.projectionLines.add(ray);
-        });
-    }
-    
-    return worldVertices;
-}
+
 
 /**
  * Phase 3: Simplified Master Scene Update Function
@@ -240,12 +178,6 @@ export function updateMaster3DScene(options = {}) {
     return worldVertices;
 }
 
-/**
- * Create a hemisphere mesh with wireframe
- * @param {number} radius - Hemisphere radius
- * @param {THREE.Vector3} position - Position for the hemisphere
- * @returns {THREE.Mesh} - Hemisphere mesh with wireframe child
- */
 /**
  * zx'z'' Intrinsic Euler Rotation Implementation
  * Applies three sequential rotations to achieve precise orientation:
@@ -503,50 +435,22 @@ export function testEulerRotations(testObject = null) {
     // Store original rotation
     const originalRotation = cube.rotation.clone();
     
-    // Test 1: Individual axis rotations
-    console.log('Test 1: Individual axis rotations');
-    
+    // Run tests
     setPreciseOrientation(cube, 45, 0, 0);
-    console.log('✓ α=45°, β=0°, γ=0° (Z-axis rotation only)');
-    
     setPreciseOrientation(cube, 0, 45, 0);
-    console.log('✓ α=0°, β=45°, γ=0° (X-axis rotation only)');
-    
     setPreciseOrientation(cube, 0, 0, 45);
-    console.log('✓ α=0°, β=0°, γ=45° (Z-axis rotation only)');
-    
-    // Test 2: Combined rotations
-    console.log('Test 2: Combined rotations');
-    
     setPreciseOrientation(cube, 30, 45, 60);
-    console.log('✓ α=30°, β=45°, γ=60° (Combined rotation)');
-    
-    // Test 3: Full rotations
-    console.log('Test 3: Full rotations');
-    
     setPreciseOrientation(cube, 90, 90, 90);
-    console.log('✓ α=90°, β=90°, γ=90° (Quarter turns)');
-    
     setPreciseOrientation(cube, 180, 0, 180);
-    console.log('✓ α=180°, β=0°, γ=180° (Half turns)');
-    
-    // Test 4: Reset to identity
-    console.log('Test 4: Reset test');
-    
     setPreciseOrientation(cube, 0, 0, 0);
-    console.log('✓ α=0°, β=0°, γ=0° (Identity rotation)');
     
-    // Test 5: Validation test
-    console.log('Test 5: Input validation');
-    
+    // Test validation
     const validated = validateEulerAngles(370, -200, 540);
-    console.log(`✓ Validation: 370° → ${validated.alpha}°, -200° → ${validated.beta}°, 540° → ${validated.gamma}°`);
     
     // Restore original rotation
     cube.rotation.copy(originalRotation);
     
     console.log('🎉 All rotation tests completed successfully!');
-    console.log('💡 Tip: Use setPreciseOrientation(state.cube, α, β, γ) to set specific orientations');
     
     return true;
 }
