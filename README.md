@@ -4,6 +4,10 @@ An interactive web application that demonstrates the principles of perspective p
 
 ![Application Preview](preview/preview.gif)
 
+## Live Demo
+
+**[Try it now!](https://yiihuang.github.io/perspective_projection/index.html)** - No installation required! 
+
 ## Functionality
 
 This application provides real-time visualization of:
@@ -42,7 +46,3 @@ python3 -m http.server 8000
 # Open in browser
 http://localhost:8000
 ```
-
-## Live Demo
-
-**[Try it now!](https://yiihuang.github.io/perspective_projection/index.html)** - No installation required! 
