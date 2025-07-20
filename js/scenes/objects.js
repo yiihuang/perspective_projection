@@ -100,7 +100,20 @@ function createProjectionSurfacesInMasterScene() {
     
     // Create image plane for master scene (actual state object, not copy)
     const planeSize = 2 * state.hemisphereRadius;
-    const planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize);
+    
+    // Create geometry based on current shape setting
+    let planeGeometry, planeBorder;
+    if (state.linearProjectionShape === 'circle') {
+        const radius = state.hemisphereRadius;
+        const segments = 64;
+        planeGeometry = new THREE.CircleGeometry(radius, segments);
+        // For circle, use RingGeometry for the border (like hemispherical projection)
+        planeBorder = new THREE.RingGeometry(radius - 0.05, radius, segments);
+    } else {
+        planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize);
+        planeBorder = new THREE.EdgesGeometry(planeGeometry);
+    }
+    
     const planeMaterial = new THREE.MeshBasicMaterial({ 
         color: config.COLORS.imagePlane, 
         transparent: true, 
@@ -114,13 +127,27 @@ function createProjectionSurfacesInMasterScene() {
         getImagePlaneZ()
     );
     
-    const planeEdges = new THREE.EdgesGeometry(planeGeometry);
     const planeEdgesMaterial = new THREE.LineBasicMaterial({ 
         color: config.COLORS.imagePlane, 
         opacity: 0.5 
     });
-    const planeBorder = new THREE.LineSegments(planeEdges, planeEdgesMaterial);
-    state.imagePlane.add(planeBorder);
+    
+    // Use Mesh for circle border (RingGeometry) and LineSegments for square
+    let planeBorderMesh;
+    if (state.linearProjectionShape === 'circle') {
+        const ringMaterial = new THREE.MeshBasicMaterial({ 
+            color: config.COLORS.imagePlane, 
+            opacity: 0.5,
+            side: THREE.DoubleSide 
+        });
+        planeBorderMesh = new THREE.Mesh(planeBorder, ringMaterial);
+    } else {
+        planeBorderMesh = new THREE.LineSegments(planeBorder, planeEdgesMaterial);
+    }
+    state.imagePlane.add(planeBorderMesh);
+    
+    // Store current shape for future comparisons
+    state.imagePlane.userData.shape = state.linearProjectionShape;
     
     // Create hemisphere for master scene (actual state object, not copy)
     state.hemisphere = createHemisphere(state.hemisphereRadius, state.viewpointPosition);

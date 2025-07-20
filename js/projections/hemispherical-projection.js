@@ -635,7 +635,6 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
             if (isThetaZero && isPhiZero) {
                 // Both theta and phi are zero - vanishing point is at origin
                 insideVP = { x: 0, y: 0 };
-                console.log(`Axis ${axisIndex}: Inside VP at center (0, 0) - both theta and phi zero`);
             } else if (isThetaZero) {
                 // Only theta is zero - vanishing point position is p_phi
                 insideVP = p_phi;
@@ -680,27 +679,14 @@ export function updateHemisphericalProjection(scenes, groups, hemisphere) {
                     x: outsideDistance * Math.cos(outsideAngle),
                     y: outsideDistance * Math.sin(outsideAngle)
                 };
-                
-                // Debug: Log the inversion calculation
-                console.log(`Axis ${axisIndex}: Inside VP at (${insideVP.x.toFixed(3)}, ${insideVP.y.toFixed(3)}), distance ${insideDistance.toFixed(3)}`);
-                console.log(`Axis ${axisIndex}: Outside VP at (${outsideVP.x.toFixed(3)}, ${outsideVP.y.toFixed(3)}), distance ${outsideDistance.toFixed(3)}`);
-                console.log(`Axis ${axisIndex}: Inversion check: ${(insideDistance * outsideDistance).toFixed(3)} should equal ${(boundaryRadius * boundaryRadius).toFixed(3)}`);
             } else {
-                console.log(`Axis ${axisIndex}: Inside VP at center (0, 0) - skipping outside VP calculation`);
+                // Inside VP at center - skip outside VP calculation
             }
         }
         
         // Store inside VP at index 0, outside VP at index 1
         vanishingPoints.push(insideVP);
         vanishingPoints.push(outsideVP);
-        
-        // Debug: Log final vanishing point positions
-        if (insideVP) {
-            console.log(`Axis ${axisIndex}: Final inside VP at (${insideVP.x.toFixed(3)}, ${insideVP.y.toFixed(3)})`);
-        }
-        if (outsideVP) {
-            console.log(`Axis ${axisIndex}: Final outside VP at (${outsideVP.x.toFixed(3)}, ${outsideVP.y.toFixed(3)})`);
-        }
         
         // Draw vanishing point markers
         if (insideVP) {

@@ -25,7 +25,7 @@ export class ProjectionManager {
             ? `${state.cubeLocalRotation.x},${state.cubeLocalRotation.y},${state.cubeLocalRotation.z}`
             : `${state.cubeEulerAngles.alpha},${state.cubeEulerAngles.beta},${state.cubeEulerAngles.gamma}`;
         
-        return `${state.viewpointPosition.x},${state.viewpointPosition.y},${state.viewpointPosition.z},${state.hemisphereRadius},${rotationData},${state.rotationMode},${state.showRedRays}`;
+        return `${state.viewpointPosition.x},${state.viewpointPosition.y},${state.viewpointPosition.z},${state.hemisphereRadius},${rotationData},${state.rotationMode},${state.showRedRays},${state.linearProjectionShape}`;
     }
 
     updateProjections(scenes, groups, cube, viewpointSphere, imagePlane, hemisphere) {
@@ -41,7 +41,7 @@ export class ProjectionManager {
             clearGroup(state.groups.master3D.projectionLines);
         }
         
-        // Always update both projections when needed
+        // Always update both projections when needed to ensure all rays are added back
         updateLinearProjection(scenes, groups, imagePlane);
         updateHemisphericalProjection(scenes, groups, hemisphere);
         

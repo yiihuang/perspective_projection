@@ -12,19 +12,30 @@ export function getImagePlaneZ() {
 }
 
 export function createLinear2DBoundary(scene) {
-    const halfSize = state.hemisphereRadius; // Half of 2R size
-    // Fixed boundary centered at origin (reference frame)
-    const planeBoundaryPoints = [
-        new THREE.Vector3(-halfSize, -halfSize, 0), 
-        new THREE.Vector3(halfSize, -halfSize, 0),
-        new THREE.Vector3(halfSize, halfSize, 0), 
-        new THREE.Vector3(-halfSize, halfSize, 0)
-    ];
-    const planeBoundaryGeom = new THREE.BufferGeometry().setFromPoints(planeBoundaryPoints);
-    const planeBoundaryMat = new THREE.LineBasicMaterial({ color: config.COLORS.boundary });
-    const linearBoundary = new THREE.LineLoop(planeBoundaryGeom, planeBoundaryMat);
-    scene.add(linearBoundary);
-    return linearBoundary;
+    const radius = state.hemisphereRadius;
+    
+    if (state.linearProjectionShape === 'circle') {
+        // Create circular boundary using RingGeometry (like hemispherical projection)
+        const ringGeometry = new THREE.RingGeometry(radius - 0.05, radius, 64);
+        const ringMaterial = new THREE.MeshBasicMaterial({ color: config.COLORS.boundary, side: THREE.DoubleSide });
+        const linearBoundary = new THREE.Mesh(ringGeometry, ringMaterial);
+        scene.add(linearBoundary);
+        return linearBoundary;
+    } else {
+        // Create square boundary (original behavior)
+        const halfSize = radius; // Half of 2R size
+        const planeBoundaryPoints = [
+            new THREE.Vector3(-halfSize, -halfSize, 0), 
+            new THREE.Vector3(halfSize, -halfSize, 0),
+            new THREE.Vector3(halfSize, halfSize, 0), 
+            new THREE.Vector3(-halfSize, halfSize, 0)
+        ];
+        const planeBoundaryGeom = new THREE.BufferGeometry().setFromPoints(planeBoundaryPoints);
+        const planeBoundaryMat = new THREE.LineBasicMaterial({ color: config.COLORS.boundary });
+        const linearBoundary = new THREE.LineLoop(planeBoundaryGeom, planeBoundaryMat);
+        scene.add(linearBoundary);
+        return linearBoundary;
+    }
 }
 
 export function updateLinearProjection(scenes, groups, imagePlane) {
@@ -37,20 +48,57 @@ export function updateLinearProjection(scenes, groups, imagePlane) {
     const currentImagePlaneZ = getImagePlaneZ();
     const newPlaneSize = 2 * state.hemisphereRadius;
     
-    // Update image plane geometry if size changed
-    if (imagePlane.geometry.parameters.width !== newPlaneSize) {
+    // Update image plane geometry if size changed or shape changed
+    const currentShape = imagePlane.userData.shape || 'square';
+    if (imagePlane.geometry.parameters.width !== newPlaneSize || currentShape !== state.linearProjectionShape) {
         // Dispose old geometries
         imagePlane.geometry.dispose();
-        const planeBorder = imagePlane.children[0];
+        let planeBorder = imagePlane.children[0];
         if (planeBorder && planeBorder.geometry) {
             planeBorder.geometry.dispose();
         }
         
-        // Create new geometries
-        imagePlane.geometry = new THREE.PlaneGeometry(newPlaneSize, newPlaneSize);
-        if (planeBorder) {
-            planeBorder.geometry = new THREE.EdgesGeometry(imagePlane.geometry);
+        // Create new geometries based on shape
+        if (state.linearProjectionShape === 'circle') {
+            const radius = state.hemisphereRadius;
+            const segments = 64;
+            imagePlane.geometry = new THREE.CircleGeometry(radius, segments);
+            // For circle, we need to recreate the border as RingGeometry Mesh
+            if (planeBorder) {
+                planeBorder.geometry.dispose();
+                planeBorder.geometry = new THREE.RingGeometry(radius - 0.05, radius, segments);
+                // Change from LineSegments to Mesh for circle
+                if (planeBorder.type !== 'Mesh') {
+                    const ringMaterial = new THREE.MeshBasicMaterial({ 
+                        color: config.COLORS.imagePlane, 
+                        opacity: 0.5,
+                        side: THREE.DoubleSide 
+                    });
+                    const newBorder = new THREE.Mesh(planeBorder.geometry, ringMaterial);
+                    imagePlane.remove(planeBorder);
+                    imagePlane.add(newBorder);
+                    // Update reference
+                    planeBorder = newBorder;
+                }
+            }
+        } else {
+            imagePlane.geometry = new THREE.PlaneGeometry(newPlaneSize, newPlaneSize);
+            if (planeBorder) {
+                planeBorder.geometry.dispose();
+                planeBorder.geometry = new THREE.EdgesGeometry(imagePlane.geometry);
+                // Change from Mesh to LineSegments for square
+                if (planeBorder.type !== 'LineSegments') {
+                    const newBorder = new THREE.LineSegments(planeBorder.geometry, planeBorder.material);
+                    imagePlane.remove(planeBorder);
+                    imagePlane.add(newBorder);
+                    // Update reference
+                    planeBorder = newBorder;
+                }
+            }
         }
+        
+        // Store current shape for future comparisons
+        imagePlane.userData.shape = state.linearProjectionShape;
     }
     
     // Position image plane at viewpoint height and correct Z distance
@@ -59,8 +107,17 @@ export function updateLinearProjection(scenes, groups, imagePlane) {
     // Update 2D boundary - fixed at origin in reference frame
     if (window.linearBoundary) {
         scenes.linear2D.remove(window.linearBoundary);
-        window.linearBoundary.geometry?.dispose();
-        window.linearBoundary.material?.dispose();
+        if (window.linearBoundary.geometry) {
+            window.linearBoundary.geometry.dispose();
+        }
+        if (window.linearBoundary.material) {
+            if (Array.isArray(window.linearBoundary.material)) {
+                window.linearBoundary.material.forEach(material => material.dispose());
+            } else {
+                window.linearBoundary.material.dispose();
+            }
+        }
+        window.linearBoundary = null;
     }
     window.linearBoundary = createLinear2DBoundary(scenes.linear2D);
     

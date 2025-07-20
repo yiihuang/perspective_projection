@@ -110,6 +110,12 @@ export class Controls {
             state.showRedRays = checked;
         });
 
+        // Linear projection shape toggle
+        this.setupCheckboxControl('linear-shape-toggle', (checked) => {
+            // Update state - automatic hash detection will trigger update
+            state.linearProjectionShape = checked ? 'circle' : 'square';
+        });
+
         setupControlDragging();
     }
 
@@ -501,8 +507,6 @@ function setupControlDragging() {
             
             // Prevent text selection and other default behaviors
             e.preventDefault();
-            
-            console.log('Drag started');
         });
         
         // Double-click to reset position
@@ -514,8 +518,6 @@ function setupControlDragging() {
             controlsContainer.style.left = 'auto';
             controlsContainer.style.top = '20px';
             controlsContainer.style.right = '20px';
-            
-            console.log('Controls position reset to default');
         });
         
         // Mouse move event - handle dragging
@@ -557,8 +559,6 @@ function setupControlDragging() {
                 
                 // Remove visual feedback
                 controlsContainer.classList.remove('controls-dragging');
-                
-                console.log('Drag ended');
             }
         });
         
@@ -570,12 +570,8 @@ function setupControlDragging() {
                 
                 // Remove visual feedback
                 controlsContainer.classList.remove('controls-dragging');
-                
-                console.log('Drag cancelled with Escape key');
             }
         });
-        
-        console.log('Control dragging setup complete');
         
     } catch (error) {
         console.error('Error setting up control dragging:', error);

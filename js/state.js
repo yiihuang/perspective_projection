@@ -71,6 +71,9 @@ export const state = {
     // Ray visualization toggles
     showRedRays: true,  // Controls whether to show full red rays
     
+    // Linear projection plane shape toggle
+    linearProjectionShape: 'circle', // 'square' or 'circle'
+    
     // Cached data for performance
     cachedWorldVertices: null,
     lastCubeMatrixWorld: new THREE.Matrix4(),

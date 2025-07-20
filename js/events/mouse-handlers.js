@@ -82,7 +82,7 @@ export class MouseHandlers {
                 this.update2DCameras();
                 state.lastActivity = Date.now(); // Track wheel zoom activity
                 this.projectionManager.scheduleUpdate('zoom2D'); // Only 2D viewports need zoom updates
-            });
+            }, { passive: false });
         });
 
         // Global mouse move event (handles cube rotation, scene rotation, and 2D zoom)

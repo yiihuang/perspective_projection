@@ -48,6 +48,9 @@ export function init() {
         controls = new Controls(projectionManager, state.cameras, sceneObjects);
         renderer = new Renderer(projectionManager, state.scenes, state.cameras, state.renderers);
         
+        // Expose renderer globally for immediate updates
+        window.renderer = renderer;
+        
         // Start the renderer
         renderer.start();
         
