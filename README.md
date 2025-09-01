@@ -2,11 +2,38 @@
 
 An interactive web application that demonstrates the principles of perspective projection by visualizing how a 3D cube projects onto different 2D surfaces. This educational tool compares **linear perspective** (planar projection) with **hemispherical perspective** (spherical projection).
 
-![Application Preview](preview/preview.gif)
+![Application Preview](img/preview.gif)
 
 ## Live Demo
 
 **[Try it now!](https://yiihuang.github.io/perspective_projection/index.html)** - No installation required! 
+
+## Future Direction
+
+The next phase of this project aims to leverage machine learning to develop an intelligent model capable of analyzing real-world images and automatically determining their perspective characteristics. This ambitious goal involves:
+
+### Core Objectives
+- **Perspective Analysis**: Automatically identify the type of perspective projection used in input images
+- **3D Structure Understanding**: Determine object distances and orientations relative to the camera
+- **Reference Plane Detection**: Identify and utilize reference planes (such as the earth plane) for spatial reasoning
+- **World Model Integration**: Contribute to building next-generation AI systems that understand real-world 3D structure
+
+### Example Workflow
+The envisioned system would work as follows:
+
+1. **Input**: A real-world photograph 
+![example_1.jpeg](img/example_1.jpeg)
+2. **Analysis**: ML model processes the image to extract perspective information
+3. **Output**: Detailed 3D spatial understanding 
+![example_2.jpeg](img/example_2.jpeg)
+*Example images courtesy of [Omao's X post](https://x.com/omao_51061954/status/1215486113785081857)*
+
+### Applications
+This technology could significantly enhance:
+- **Video Generation**: Improved consistency in 3D-aware content creation
+- **Computer Vision**: Better understanding of spatial relationships in images
+- **Autonomous Systems**: Enhanced perception and navigation capabilities
+- **Augmented Reality**: More accurate virtual object placement in real environments
 
 ## Functionality
 
