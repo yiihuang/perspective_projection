@@ -1,5 +1,5 @@
 import { updateLinearProjection } from './linear-projection.js';
-import { updateHemisphericalProjection } from './hemispherical-projection.js';
+import { updateHemisphericalProjection } from './hemispherical/index.js';
 import { state } from '../state.js';
 import { clearGroup } from '../utils/three-utils.js';
 

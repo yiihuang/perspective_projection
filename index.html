@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Combined Linear and Hemispherical Perspective</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/windows.css">
-    <link rel="stylesheet" href="css/controls.css">
+    <link rel="stylesheet" href="css/main.css?v=17">
+    <link rel="stylesheet" href="css/windows.css?v=17">
+    <link rel="stylesheet" href="css/controls.css?v=17">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/main.js?v=17"></script>
 </head>
+
 <body>
+    <!-- Mobile window switcher (only visible on phones) -->
+    <div class="mobile-window-switcher" style="display: none;">
+        <button id="mobile-hemi-btn" class="active">Hemispherical</button>
+        <button id="mobile-linear-btn">Linear</button>
+    </div>
+
     <div id="container">
         <div id="linear3D-window" class="window">
             <div class="window-header">
@@ -23,7 +31,7 @@
                 <div id="linear3D" class="view-content"></div>
             </div>
         </div>
-        
+
         <div id="linear2D-window" class="window">
             <div class="window-header">
                 <div class="window-title">Linear: 2D Projection (Drag/Wheel to Zoom)</div>
@@ -35,7 +43,7 @@
                 <div id="linear2D" class="view-content view-2d"></div>
             </div>
         </div>
-        
+
         <div id="hemi3D-window" class="window">
             <div class="window-header">
                 <div class="window-title">Hemispherical: 3D Scene (L-Click: Cube, R-Click: Scene)</div>
@@ -47,7 +55,7 @@
                 <div id="hemi3D" class="view-content"></div>
             </div>
         </div>
-        
+
         <div id="hemi2D-window" class="window">
             <div class="window-header">
                 <div class="window-title">Hemispherical: 2D Projection (Drag/Wheel to Zoom)</div>
@@ -86,6 +94,18 @@
     <div id="controls-container">
         <button id="controls-toggle">Controls</button>
         <div id="controls">
+            <!-- Phase 4.2: Preset System -->
+            <div class="preset-container">
+                <label for="preset-select">View Presets</label>
+                <select id="preset-select" class="preset-select">
+                    <option value="custom">Custom</option>
+                    <option value="default">Default View</option>
+                    <option value="onePoint">1-Point Perspective</option>
+                    <option value="twoPoint">2-Point Perspective</option>
+                    <option value="threePoint">3-Point Perspective</option>
+                </select>
+            </div>
+
             <div class="slider-container">
                 <label for="viewpointX">Viewpoint X</label>
                 <div class="slider-row">
@@ -122,7 +142,7 @@
                     <button type="button" id="precise-mode-btn" class="mode-btn">Precise Orientation</button>
                 </div>
                 <div class="help-text">Local: Relative adjustments | Precise: Absolute orientation</div>
-                
+
                 <!-- Reset Button -->
                 <div class="reset-button-container">
                     <button type="button" id="reset-rotation-btn" class="reset-btn">🔄 Reset Rotation</button>
@@ -139,20 +159,20 @@
                         <input type="number" id="cubeRotX-number" min="-180" max="180" value="0" step="1">
                     </div>
                 </div>
-            <div class="slider-container">
-                <label for="cubeRotY">Cube Rot Y</label>
-                <div class="slider-row">
-                    <input type="range" id="cubeRotY" min="-180" max="180" value="0" step="1">
-                    <input type="number" id="cubeRotY-number" min="-180" max="180" value="0" step="1">
+                <div class="slider-container">
+                    <label for="cubeRotY">Cube Rot Y</label>
+                    <div class="slider-row">
+                        <input type="range" id="cubeRotY" min="-180" max="180" value="0" step="1">
+                        <input type="number" id="cubeRotY-number" min="-180" max="180" value="0" step="1">
+                    </div>
                 </div>
-            </div>
-            <div class="slider-container">
-                <label for="cubeRotZ">Cube Rot Z</label>
-                <div class="slider-row">
-                    <input type="range" id="cubeRotZ" min="-180" max="180" value="0" step="1">
-                    <input type="number" id="cubeRotZ-number" min="-180" max="180" value="0" step="1">
+                <div class="slider-container">
+                    <label for="cubeRotZ">Cube Rot Z</label>
+                    <div class="slider-row">
+                        <input type="range" id="cubeRotZ" min="-180" max="180" value="0" step="1">
+                        <input type="number" id="cubeRotZ-number" min="-180" max="180" value="0" step="1">
+                    </div>
                 </div>
-            </div>
             </div>
 
             <!-- Precise Orientation Controls (zx'z'' Euler angles) -->
@@ -189,7 +209,7 @@
                     <input type="number" id="zoom3D-number" min="10" max="40" value="16.5" step="0.1">
                 </div>
             </div>
-            
+
             <!-- Ray Visualization Controls -->
             <div class="slider-container">
                 <label class="checkbox-label">
@@ -198,7 +218,7 @@
                 </label>
                 <div class="help-text">Toggle to show/hide projection rays</div>
             </div>
-            
+
             <!-- Linear Projection Shape Toggle -->
             <div class="slider-container">
                 <label class="checkbox-label">
@@ -219,9 +239,10 @@
                 console.warn('Window manager not yet initialized');
             }
         }
-        
+
         // Export toggleWindow globally for HTML onclick handlers
         window.toggleWindow = toggleWindow;
     </script>
 </body>
+
 </html>

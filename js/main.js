@@ -6,7 +6,10 @@ import { setupScenes } from './scenes/scene-manager.js';
 import { createSceneObjects } from './scenes/objects.js';
 import { ProjectionManager } from './projections/projection-manager.js';
 import { MouseHandlers } from './events/mouse-handlers.js';
+import { TouchHandlers } from './events/touch-handlers.js';
 import { Controls } from './ui/controls.js';
+import { KeyboardShortcuts } from './ui/keyboard-shortcuts.js';
+import { MobileWindowSwitcher } from './ui/mobile-window-switcher.js';
 import { Renderer } from './rendering/renderer.js';
 import { setPreciseOrientation, testEulerRotations, validateEulerAngles, synchronizeRotationState, resetCubeOrientation } from './utils/three-utils.js';
 
@@ -14,7 +17,10 @@ import { setPreciseOrientation, testEulerRotations, validateEulerAngles, synchro
 let projectionManager;
 let windowManager;
 let mouseHandlers;
+let touchHandlers;
 let controls;
+let keyboardShortcuts;
+let mobileWindowSwitcher;
 let renderer;
 
 
@@ -45,7 +51,10 @@ export function init() {
         projectionManager = new ProjectionManager();
         windowManager = new WindowManager();
         mouseHandlers = new MouseHandlers(projectionManager, state.cameras);
+        touchHandlers = new TouchHandlers(projectionManager, state.cameras);
         controls = new Controls(projectionManager, state.cameras, sceneObjects);
+        keyboardShortcuts = new KeyboardShortcuts(projectionManager);
+        mobileWindowSwitcher = new MobileWindowSwitcher();
         renderer = new Renderer(projectionManager, state.scenes, state.cameras, state.renderers);
         
         // Expose renderer globally for immediate updates

@@ -1,6 +1,6 @@
 import { state } from '../state.js';
 import { config } from '../config.js';
-import { createMaterial, clearGroup, updateCubeInScene, updateViewpointInScene, updateProjectedViewpointMarker, getCachedWorldVertices, updateMaster3DScene, RAY_MATERIALS } from '../utils/three-utils.js';
+import { createMaterial, clearGroup, updateCubeInScene, updateViewpointInScene, updateProjectedViewpointMarker, getCachedWorldVertices, updateMaster3DScene, RAY_MATERIALS, MATERIALS } from '../utils/three-utils.js';
 
 /**
  * Linear Perspective Projection Module
@@ -161,11 +161,9 @@ export function updateLinearProjection(scenes, groups, imagePlane) {
     });
 
     // Draw projected cube edges
+    // Use centralized material (Phase 1 Optimization)
     const edges = config.CUBE_MAPPINGS.edges;
-    const edgeMaterial = new THREE.LineBasicMaterial({ 
-        color: config.COLORS.cubeEdge, // Use same color as hemispherical projection
-        linewidth: 3 // Make edges thicker to ensure they're visible on top
-    });
+    const edgeMaterial = MATERIALS.EDGES.PROJECTED;
     for (let i = 0; i < edges.length; i += 2) {
         const p1 = projectedVertices[edges[i]];
         const p2 = projectedVertices[edges[i+1]];
@@ -201,10 +199,12 @@ export function updateLinearProjection(scenes, groups, imagePlane) {
         return { point: vp, color: item.color, lightColor: item.lightColor };
     });
 
-    vanishingPoints.forEach(vpData => {
+    // Use centralized materials (Phase 1 Optimization)
+    const vpMaterialKeys = ['RED', 'GREEN', 'BLUE'];
+    vanishingPoints.forEach((vpData, axisIndex) => {
         if (isFinite(vpData.point.x) && isFinite(vpData.point.y)) {
             const vpGeom = new THREE.CircleGeometry(0.15, 16);
-            const vpMat = createMaterial('VanishingPointMaterial', { color: vpData.color });
+            const vpMat = MATERIALS.VANISHING_POINTS[vpMaterialKeys[axisIndex]];
             const vpMesh = new THREE.Mesh(vpGeom, vpMat);
             vpMesh.position.set(vpData.point.x, vpData.point.y, 0);
             groups.linear2D.vanishingPoints.add(vpMesh);
@@ -212,12 +212,14 @@ export function updateLinearProjection(scenes, groups, imagePlane) {
     });
 
     // Draw guide lines from cube edges to vanishing points
+    // Use centralized materials (Phase 1 Optimization)
     const edgeAxisMapping = config.CUBE_MAPPINGS.edgeAxisMapping;
+    const guideMaterialKeys = ['RED', 'GREEN', 'BLUE'];
 
     vanishingPoints.forEach((vpData, axisIndex) => {
         if (!isFinite(vpData.point.x) || !isFinite(vpData.point.y)) return;
 
-        const guideMaterial = createMaterial('GuideMaterial', { color: vpData.lightColor });
+        const guideMaterial = MATERIALS.GUIDES[guideMaterialKeys[axisIndex]];
 
         const axisVertices = edgeAxisMapping[axisIndex];
         for (const vertexIndex of axisVertices) {

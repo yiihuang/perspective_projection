@@ -12,7 +12,7 @@ export class Renderer {
         this.scenes = scenes;
         this.cameras = cameras;
         this.renderers = renderers;
-        
+
         // Performance monitoring
         this.renderStats = {
             totalFrames: 0,
@@ -21,13 +21,13 @@ export class Renderer {
             renderTime: 0,
             lastFPSTime: Date.now()
         };
-        
+
         this.frameCount = 0;
         this.lastFrameTime = Date.now();
-        
+
         this.setupEventListeners();
         this.initializeResizeObserver();
-        
+
         // Expose performance stats to console
         window.getRenderStats = () => this.getRenderStats();
     }
@@ -62,15 +62,20 @@ export class Renderer {
             const viewElement = document.getElementById(id);
             const camera = this.cameras[id];
             const renderer = this.renderers[id];
-            
+
             if (camera.isPerspectiveCamera) {
                 camera.aspect = viewElement.clientWidth / viewElement.clientHeight;
                 camera.updateProjectionMatrix();
             } else {
                 this.update2DCameras();
             }
-            
+
             renderer.setSize(viewElement.clientWidth, viewElement.clientHeight);
+
+            // Mark dirty and force render to prevent blank canvas
+            state.viewportDirty[id] = true;
+            this.projectionManager.markRenderNeeded();
+            this.renderViewport(id);
         });
     }
 
@@ -93,25 +98,25 @@ export class Renderer {
                 entries.forEach(entry => {
                     const element = entry.target;
                     const id = element.id;
-                    
+
                     // Skip if element has no dimensions (likely hidden)
                     if (element.clientWidth === 0 || element.clientHeight === 0) {
                         return;
                     }
-                    
+
                     if (this.renderers[id]) {
                         const camera = this.cameras[id];
                         const renderer = this.renderers[id];
-                        
+
                         if (camera.isPerspectiveCamera) {
                             camera.aspect = element.clientWidth / element.clientHeight;
                             camera.updateProjectionMatrix();
                         } else {
                             this.update2DCameras();
                         }
-                        
+
                         renderer.setSize(element.clientWidth, element.clientHeight);
-                        
+
                         // Force immediate render after resize
                         state.viewportDirty[id] = true;
                         this.projectionManager.markRenderNeeded();
@@ -119,7 +124,7 @@ export class Renderer {
                     }
                 });
             });
-            
+
             // Observe all view elements
             ['linear3D', 'linear2D', 'hemi3D', 'hemi2D'].forEach(id => {
                 const element = document.getElementById(id);
@@ -132,43 +137,43 @@ export class Renderer {
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        
+
         const now = Date.now();
         const deltaTime = now - this.lastFrameTime;
         const timeSinceLastActivity = now - state.lastActivity;
-        
+
         // Smart frame rate scaling
         state.isIdle = timeSinceLastActivity > 1000; // Consider idle after 1 second
         if (state.isIdle) {
             state.targetFPS = 30; // Reduce to 30fps when idle
             state.frameInterval = 1000 / state.targetFPS;
         }
-        
+
         // Frame rate limiting
         if (deltaTime < state.frameInterval) {
             return; // Skip this frame
         }
-        
+
         this.lastFrameTime = now;
         this.frameCount++;
         this.renderStats.totalFrames++;
-        
+
         // Update projections if needed
         if (this.projectionManager.shouldUpdate()) {
             this.projectionManager.updateProjections(
-                this.scenes, 
-                state.groups, 
-                window.sceneObjects?.cube, 
-                window.sceneObjects?.viewpointSphere, 
-                window.sceneObjects?.imagePlane, 
+                this.scenes,
+                state.groups,
+                window.sceneObjects?.cube,
+                window.sceneObjects?.viewpointSphere,
+                window.sceneObjects?.imagePlane,
                 window.sceneObjects?.hemisphere
             );
         }
-        
+
         // Selective rendering: only render viewports that are dirty
         let rendered = false;
         const renderStartTime = performance.now();
-        
+
         if (!state.isIdle || this.projectionManager.isRenderNeeded()) {
             Object.keys(this.renderers).forEach(id => {
                 if (state.viewportDirty[id] || !state.isIdle) {
@@ -178,19 +183,19 @@ export class Renderer {
                     rendered = true;
                 }
             });
-            
+
             if (rendered) {
                 this.projectionManager.clearRenderFlag();
             }
         }
-        
+
         // Update render stats
         if (rendered) {
             this.renderStats.renderTime = performance.now() - renderStartTime;
         } else {
             this.renderStats.skippedFrames++;
         }
-        
+
         // Calculate FPS every second
         if (this.frameCount % 60 === 0) {
             const timeDiff = now - (this.renderStats.lastFPSTime || now);
@@ -209,7 +214,7 @@ export class Renderer {
     renderViewport(id) {
         const renderer = this.renderers[id];
         const camera = this.cameras[id];
-        
+
         if (id.includes('3D') && state.master3D) {
             // Step 3: Direct master scene rendering with projection surface visibility control
             this.setProjectionSurfaceVisibility(id);
@@ -228,7 +233,7 @@ export class Renderer {
         if (!state.imagePlane || !state.hemisphere) {
             return;
         }
-        
+
         if (viewportId === 'linear3D') {
             // Linear 3D viewport: show image plane, hide hemisphere
             state.imagePlane.visible = true;
@@ -241,7 +246,7 @@ export class Renderer {
     }
 
     getRenderStats() {
-        const efficiency = this.renderStats.totalFrames > 0 ? 
+        const efficiency = this.renderStats.totalFrames > 0 ?
             (1 - this.renderStats.skippedFrames / this.renderStats.totalFrames) * 100 : 100;
         return {
             ...this.renderStats,
@@ -261,7 +266,7 @@ export class Renderer {
             border-radius: 5px; z-index: 1000;
         `;
         document.body.appendChild(overlay);
-        
+
         const interval = setInterval(() => {
             const stats = this.getRenderStats();
             overlay.innerHTML = `

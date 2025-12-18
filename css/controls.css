@@ -23,7 +23,7 @@
     font-size: 0.9em;
     font-weight: 500;
     color: #333;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -32,7 +32,7 @@
 
 #window-menu-toggle:hover {
     background: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 #window-menu-toggle::after {
@@ -48,7 +48,7 @@
     background: rgba(255, 255, 255, 0.98);
     padding: 8px 0;
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     border: 1px solid #e5e7eb;
     backdrop-filter: blur(10px);
     display: none;
@@ -88,18 +88,19 @@
     font-size: 0.9em;
     font-weight: 500;
     color: #333;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     gap: 6px;
     transition: all 0.2s ease;
     position: relative;
-    padding-left: 20px; /* Make room for drag indicator */
+    padding-left: 20px;
+    /* Make room for drag indicator */
 }
 
 #controls-toggle:hover {
     background: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 #controls-toggle::after {
@@ -123,10 +124,10 @@
     top: 100%;
     right: 0;
     margin-top: 8px;
-    background: rgba(255, 255, 255, 0.98);
+    background: rgba(255, 255, 255, 0.6);
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     border: 1px solid #e5e7eb;
     backdrop-filter: blur(10px);
     display: none;
@@ -194,7 +195,7 @@
     background: #3b82f6;
     cursor: pointer;
     border: 2px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .slider-container input[type="range"]::-moz-range-thumb {
@@ -204,7 +205,7 @@
     background: #3b82f6;
     cursor: pointer;
     border: 2px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Checkbox controls */
@@ -281,7 +282,7 @@
     border-radius: 6px;
     border: 1px solid #d1d5db;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .mode-btn {
@@ -309,7 +310,7 @@
 .mode-btn.active {
     background: #3b82f6;
     color: #ffffff;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .mode-btn.active:hover {
@@ -364,27 +365,395 @@
     transition: opacity 0.2s ease;
 }
 
-    #local-rotation-section.disabled,
-    #precise-orientation-section.disabled {
-        opacity: 0.5;
-        pointer-events: none;
+#local-rotation-section.disabled,
+#precise-orientation-section.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Drag functionality styles */
+.controls-draggable {
+    cursor: move !important;
+}
+
+.controls-dragging {
+    opacity: 0.8;
+    transform: scale(1.02);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25) !important;
+    transition: none !important;
+    /* Disable transitions during drag */
+    z-index: 1000 !important;
+}
+
+.controls-dragging #controls-toggle {
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+
+/* Phase 4.1: Keyboard Shortcuts Help Overlay */
+.keyboard-help-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.keyboard-help-content {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.keyboard-help-content h2 {
+    margin: 0 0 24px 0;
+    font-size: 1.8em;
+    color: #1f2937;
+    text-align: center;
+}
+
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.shortcut-group h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1em;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.shortcut-item kbd {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 0.9em;
+    min-width: 32px;
+    text-align: center;
+    box-shadow: 0 2px 0 #d1d5db, inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+    color: #374151;
+    font-weight: 600;
+}
+
+.shortcut-item span {
+    color: #6b7280;
+    font-size: 0.95em;
+}
+
+.close-help-btn {
+    width: 100%;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.close-help-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+.close-help-btn:active {
+    transform: translateY(0);
+}
+
+/* Viewport focus effect */
+.window.focused {
+    outline: 3px solid #3b82f6;
+    outline-offset: -3px;
+}
+
+/* Phase 4.2: Preset System Styles */
+.preset-container {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.preset-container label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #374151;
+    font-size: 0.9em;
+}
+
+.preset-select {
+    width: 100%;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #ffffff, #f9fafb);
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95em;
+    color: #1f2937;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.preset-select:hover {
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+.preset-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.preset-select option {
+    padding: 8px;
+}
+
+/* Phase 4.3: Contextual Tooltips */
+[data-tooltip] {
+    position: relative;
+    cursor: help;
+}
+
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: rgba(31, 41, 55, 0.95);
+    color: #ffffff;
+    font-size: 0.85em;
+    line-height: 1.4;
+    white-space: nowrap;
+    border-radius: 6px;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 2px);
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(31, 41, 55, 0.95);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Tooltip positioning adjustments for specific elements */
+.mode-toggle-label[data-tooltip]::after {
+    white-space: normal;
+    max-width: 250px;
+    text-align: center;
+}
+
+/* Phase 5.1: Responsive Controls for Mobile */
+@media (max-width: 768px) {
+    #controls-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        width: 100%;
+        z-index: 200;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.6);
     }
 
-    /* Drag functionality styles */
-    .controls-draggable {
-        cursor: move !important;
+    #controls-toggle {
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        padding: 16px 12px;
+        font-size: 1em;
+        background: rgba(255, 255, 255, 0.8);
+        border: none;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 56px;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
     }
 
-    .controls-dragging {
-        opacity: 0.8;
-        transform: scale(1.02);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.25) !important;
-        transition: none !important; /* Disable transitions during drag */
-        z-index: 1000 !important;
+    #controls {
+        max-height: 40vh;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 0;
     }
 
-    .controls-dragging #controls-toggle {
-        background: rgba(255, 255, 255, 0.9) !important;
+    /* Larger touch targets */
+    input[type="range"] {
+        height: 44px;
+        cursor: pointer;
     }
 
- 
+    input[type="number"] {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevent iOS zoom */
+        padding: 12px;
+    }
+
+    input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+    }
+
+    .preset-select {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevent iOS zoom */
+        padding: 12px;
+    }
+
+    .mode-btn {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 0.95em;
+    }
+
+    .reset-btn {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 0.95em;
+    }
+
+    /* Hide window menu on mobile (not useful in stacked layout) */
+    #window-menu-container {
+        display: none;
+    }
+
+    /* Adjust slider containers for mobile */
+    .slider-container {
+        margin-bottom: 20px;
+    }
+
+    .slider-row {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    #controls {
+        max-height: 40vh;
+        font-size: 0.9em;
+    }
+
+    .slider-container label {
+        font-size: 0.9em;
+    }
+
+    .help-text {
+        font-size: 0.8em;
+    }
+
+    /* Compact preset dropdown */
+    .preset-container {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+    }
+}
+
+/* Mobile drawer handle (visual indicator) */
+@media (max-width: 768px) {
+    #controls-toggle::before {
+        content: '⋮⋮' !important;
+        display: block !important;
+        width: 40px;
+        height: 4px;
+        background: #d1d5db;
+        border-radius: 2px;
+        margin: 0 auto 8px;
+        position: static !important;
+        transform: none !important;
+        font-size: 1.2em !important;
+        color: #9ca3af !important;
+        opacity: 1 !important;
+        left: auto !important;
+        top: auto !important;
+    }
+}
+
+/* Ensure controls are accessible on mobile */
+@media (max-width: 480px) {
+    #controls-container {
+        /* Fixed height to prevent content blocking */
+        height: auto;
+        max-height: 70vh;
+    }
+
+    #controls-toggle {
+        padding: 18px 12px;
+        min-height: 60px;
+        font-size: 1.05em;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Make sure controls panel expands upward, not blocking content */
+    #controls {
+        position: fixed;
+        bottom: 60px;
+        /* Above the toggle button */
+        left: 0;
+        right: 0;
+        top: auto;
+        margin-top: 0;
+        border-radius: 12px 12px 0 0;
+        max-height: calc(70vh - 60px);
+    }
+
+    #controls.show {
+        display: flex;
+    }
+}

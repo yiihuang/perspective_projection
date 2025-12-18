@@ -62,20 +62,76 @@ export function createMaterial(type, options = {}) {
  */
 export const RAY_MATERIALS = {
     // Red full rays (viewpoint → target, for single ray system)
-    RED_FULL: new THREE.LineBasicMaterial({ 
-        color: 0xff3333, 
+    RED_FULL: new THREE.LineBasicMaterial({
+        color: 0xff3333,
         opacity: 0.8,
         transparent: true,
         linewidth: 3
     }),
-    
+
     // Red extended rays (hemispherical projection extended rays)
-    RED_EXTENDED: new THREE.LineBasicMaterial({ 
-        color: 0xff3333, 
+    RED_EXTENDED: new THREE.LineBasicMaterial({
+        color: 0xff3333,
         opacity: 0.7,
         transparent: true,
         linewidth: 3
     })
+};
+
+/**
+ * Phase 1 Optimization: Centralized Material Cache
+ * Pre-created materials to eliminate per-frame allocations
+ */
+export const MATERIALS = {
+    // Guide line materials (for vanishing point guidelines)
+    GUIDES: {
+        RED: new THREE.LineBasicMaterial({
+            color: 0xFF8282,
+            opacity: 0.7,
+            transparent: true
+        }),
+        GREEN: new THREE.LineBasicMaterial({
+            color: 0x71C0BB,
+            opacity: 0.7,
+            transparent: true
+        }),
+        BLUE: new THREE.LineBasicMaterial({
+            color: 0x63C8FF,
+            opacity: 0.7,
+            transparent: true
+        })
+    },
+
+    // Cube edge materials
+    EDGES: {
+        CUBE: new THREE.LineBasicMaterial({
+            color: 0x0077cc,
+            linewidth: 3
+        }),
+        PROJECTED: new THREE.LineBasicMaterial({
+            color: 0x0077cc,
+            linewidth: 2
+        })
+    },
+
+    // Vanishing point marker materials
+    VANISHING_POINTS: {
+        RED: new THREE.MeshBasicMaterial({
+            color: 0xff4136,
+            opacity: 1.0
+        }),
+        GREEN: new THREE.MeshBasicMaterial({
+            color: 0x2ecc40,
+            opacity: 1.0
+        }),
+        BLUE: new THREE.MeshBasicMaterial({
+            color: 0x0074d9,
+            opacity: 1.0
+        })
+    },
+
+    // Ray materials (maintained for backward compatibility with RAY_MATERIALS)
+    RAYS: RAY_MATERIALS
 };
 
 export function updateCubeInScene(sceneId, targetCube, scene) {

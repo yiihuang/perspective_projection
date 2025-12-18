@@ -13,8 +13,8 @@ body {
     position: relative;
 }
 
-.view-content { 
-    background-color: #ffffff; 
+.view-content {
+    background-color: #ffffff;
     cursor: grab;
     width: 100%;
     height: 100%;
@@ -24,8 +24,8 @@ body {
     cursor: grabbing;
 }
 
-.view-2d { 
-    background-color: #f9fafb; 
+.view-2d {
+    background-color: #f9fafb;
     cursor: ns-resize;
 }
 
@@ -33,8 +33,169 @@ body {
     cursor: ns-resize;
 }
 
-canvas { 
-    display: block; 
-    width: 100%; 
-    height: 100%; 
-} 
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Phase 5.1: Responsive Layout for Mobile */
+@media (max-width: 768px) {
+
+    /* Tablet: Stack viewports vertically (still show all 4) */
+    #container {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .window {
+        position: relative !important;
+        width: 100% !important;
+        height: 50vh !important;
+        left: 0 !important;
+        top: 0 !important;
+        margin-bottom: 8px;
+        border-radius: 0;
+    }
+
+    .window-header {
+        padding: 8px 12px;
+        font-size: 0.9em;
+    }
+
+    .window-content {
+        height: calc(100% - 40px);
+    }
+
+    /* Make viewports touch-friendly */
+    .view-content {
+        touch-action: none;
+        /* Prevent default browser gestures */
+    }
+}
+
+@media (max-width: 480px) {
+    /* Mobile phones: Show only 2 windows (hemispherical by default) */
+
+    /* Add padding bottom to container to prevent controls from blocking content */
+    #container {
+        padding-bottom: 80px;
+        /* Space for controls drawer */
+    }
+
+    /* Hide linear windows by default on mobile */
+    #linear3D-window,
+    #linear2D-window {
+        display: none;
+    }
+
+    /* Show hemispherical windows on mobile */
+    #hemi3D-window,
+    #hemi2D-window {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Hide desktop window menu on mobile */
+    #window-menu-container {
+        display: none !important;
+    }
+
+    /* Hide close buttons on mobile (we always need 2 windows) */
+    .window-button.close-btn {
+        display: none !important;
+    }
+
+    /* Mobile: Only 2 windows - account for controls space */
+    .window {
+        height: calc((100vh - 80px) / 2) !important;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .window-header {
+        padding: 12px 16px;
+        font-size: 0.95em;
+        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .window-title {
+        font-size: 0.9em;
+    }
+
+    .window-content {
+        height: calc(100% - 48px);
+    }
+
+    /* Adjust canvas rendering for mobile performance */
+    canvas {
+        image-rendering: optimizeSpeed;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: optimize-contrast;
+    }
+}
+
+/* Mobile window switcher (only on phones) */
+@media (max-width: 480px) {
+    .mobile-window-switcher {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        z-index: 9999;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        padding: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        display: flex;
+        gap: 4px;
+    }
+
+    .mobile-window-switcher button {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-weight: 500;
+        color: #374151;
+        min-height: 36px;
+        min-height: 36px;
+        cursor: pointer;
+        touch-action: none;
+        /* Critical: tells browser this is not for scrolling */
+        pointer-events: auto;
+        /* Ensure events are captured */
+    }
+
+    .mobile-window-switcher button.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+}
+
+/* Touch-specific optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* This targets touch devices specifically */
+
+    /* Larger tap targets */
+    button,
+    .window-button,
+    .mode-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Remove hover effects on touch devices */
+    .window:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Smoother scrolling */
+    * {
+        -webkit-overflow-scrolling: touch;
+    }
+}

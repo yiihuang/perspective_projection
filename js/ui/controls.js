@@ -27,8 +27,18 @@ export class Controls {
         // Handle controls dropdown toggle
         const controlsToggle = document.getElementById('controls-toggle');
         const controlsPanel = document.getElementById('controls');
-        
+
+        // Mobile touch handler (takes priority on touch devices)
+        controlsToggle.addEventListener('touchend', (e) => {
+            console.log('Controls toggle touchend');
+            e.preventDefault();
+            e.stopPropagation();
+            controlsPanel.classList.toggle('show');
+            console.log('Controls panel show:', controlsPanel.classList.contains('show'));
+        }, { passive: false });
+
         controlsToggle.addEventListener('click', (e) => {
+            console.log('Controls toggle click, hasDragged:', hasDragged);
             // Don't toggle if we just finished dragging
             if (hasDragged) {
                 e.preventDefault();
@@ -38,6 +48,7 @@ export class Controls {
             }
             e.stopPropagation();
             controlsPanel.classList.toggle('show');
+            console.log('Controls panel show:', controlsPanel.classList.contains('show'));
         });
         
         // Close controls when clicking outside
@@ -115,6 +126,9 @@ export class Controls {
             // Update state - automatic hash detection will trigger update
             state.linearProjectionShape = checked ? 'circle' : 'square';
         });
+
+        // Phase 4.2: Preset system
+        this.setupPresetControls();
 
         setupControlDragging();
     }
@@ -465,6 +479,178 @@ export class Controls {
         }
     }
 
+    // Phase 4.2: Preset System
+    setupPresetControls() {
+        const presetSelect = document.getElementById('preset-select');
+        if (!presetSelect) {
+            console.warn('Preset select element not found');
+            return;
+        }
+
+        presetSelect.addEventListener('change', (e) => {
+            const presetName = e.target.value;
+            if (presetName && presetName !== 'custom') {
+                this.applyPreset(presetName);
+            }
+        });
+    }
+
+    applyPreset(presetName) {
+        const PRESETS = {
+            default: {
+                name: 'Default View',
+                viewpoint: { x: 0, y: 0, z: 5 },
+                rotation: { x: 0, y: 0, z: 0 },
+                radius: 5,
+                description: 'Standard starting view'
+            },
+            onePoint: {
+                name: '1-Point Perspective',
+                viewpoint: { x: 0, y: 0, z: 8 },
+                rotation: { x: 0, y: 0, z: 0 },
+                radius: 5,
+                description: 'Single vanishing point (front view)'
+            },
+            twoPoint: {
+                name: '2-Point Perspective',
+                viewpoint: { x: 0, y: 0, z: 8 },
+                rotation: { x: 0, y: 45, z: 0 },
+                radius: 5,
+                description: 'Two vanishing points (angled view)'
+            },
+            threePoint: {
+                name: '3-Point Perspective',
+                viewpoint: { x: 0, y: 3, z: 8 },
+                rotation: { x: 25, y: 35, z: 0 },
+                radius: 5,
+                description: 'Three vanishing points (aerial view)'
+            }
+        };
+
+        const preset = PRESETS[presetName];
+        if (!preset) {
+            console.error('Unknown preset:', presetName);
+            return;
+        }
+
+        console.log(`Applying preset: ${preset.name}`);
+
+        // Animate transition (500ms)
+        const duration = 500;
+        const startTime = Date.now();
+
+        // Store starting values
+        const startVP = {
+            x: state.viewpointPosition.x,
+            y: state.viewpointPosition.y,
+            z: state.viewpointPosition.z
+        };
+        const startRot = { ...state.cubeLocalRotation };
+        const startRadius = state.hemisphereRadius;
+
+        // Target values
+        const targetVP = preset.viewpoint;
+        const targetRot = preset.rotation;
+        const targetRadius = preset.radius;
+
+        const animate = () => {
+            const now = Date.now();
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Easing function (ease-in-out cubic)
+            const eased = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            // Interpolate values
+            state.viewpointPosition.x = startVP.x + (targetVP.x - startVP.x) * eased;
+            state.viewpointPosition.y = startVP.y + (targetVP.y - startVP.y) * eased;
+            state.viewpointPosition.z = startVP.z + (targetVP.z - startVP.z) * eased;
+
+            state.cubeLocalRotation.x = startRot.x + (targetRot.x - startRot.x) * eased;
+            state.cubeLocalRotation.y = startRot.y + (targetRot.y - startRot.y) * eased;
+            state.cubeLocalRotation.z = startRot.z + (targetRot.z - startRot.z) * eased;
+
+            state.hemisphereRadius = startRadius + (targetRadius - startRadius) * eased;
+
+            // Update cube rotation
+            if (state.cube) {
+                state.cube.rotation.set(
+                    state.cubeLocalRotation.x * Math.PI / 180,
+                    state.cubeLocalRotation.y * Math.PI / 180,
+                    state.cubeLocalRotation.z * Math.PI / 180
+                );
+            }
+
+            // Update UI controls
+            this.updateAllControlInputs();
+
+            // Trigger render
+            this.projectionManager.scheduleUpdate('all', true);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                console.log('Preset animation complete');
+            }
+        };
+
+        // Switch to local rotation mode for presets
+        if (state.rotationMode !== 'local') {
+            setRotationMode('local');
+            const localBtn = document.getElementById('local-mode-btn');
+            const preciseBtn = document.getElementById('precise-mode-btn');
+            if (localBtn) localBtn.classList.add('active');
+            if (preciseBtn) preciseBtn.classList.remove('active');
+        }
+
+        // Recreate hemisphere if radius changed
+        if (Math.abs(targetRadius - startRadius) > 0.01) {
+            this.recreateHemisphere();
+        }
+
+        animate();
+    }
+
+    updateAllControlInputs() {
+        // Update viewpoint inputs
+        const vpXInput = document.getElementById('viewpointX-number');
+        const vpYInput = document.getElementById('viewpointY-number');
+        const vpZInput = document.getElementById('viewpointZ-number');
+        const vpXSlider = document.getElementById('viewpointX');
+        const vpYSlider = document.getElementById('viewpointY');
+        const vpZSlider = document.getElementById('viewpointZ');
+
+        if (vpXInput) vpXInput.value = state.viewpointPosition.x.toFixed(2);
+        if (vpYInput) vpYInput.value = state.viewpointPosition.y.toFixed(2);
+        if (vpZInput) vpZInput.value = state.viewpointPosition.z.toFixed(2);
+        if (vpXSlider) vpXSlider.value = state.viewpointPosition.x;
+        if (vpYSlider) vpYSlider.value = state.viewpointPosition.y;
+        if (vpZSlider) vpZSlider.value = state.viewpointPosition.z;
+
+        // Update rotation inputs
+        const rotXInput = document.getElementById('cubeRotX-number');
+        const rotYInput = document.getElementById('cubeRotY-number');
+        const rotZInput = document.getElementById('cubeRotZ-number');
+        const rotXSlider = document.getElementById('cubeRotX');
+        const rotYSlider = document.getElementById('cubeRotY');
+        const rotZSlider = document.getElementById('cubeRotZ');
+
+        if (rotXInput) rotXInput.value = state.cubeLocalRotation.x.toFixed(1);
+        if (rotYInput) rotYInput.value = state.cubeLocalRotation.y.toFixed(1);
+        if (rotZInput) rotZInput.value = state.cubeLocalRotation.z.toFixed(1);
+        if (rotXSlider) rotXSlider.value = state.cubeLocalRotation.x;
+        if (rotYSlider) rotYSlider.value = state.cubeLocalRotation.y;
+        if (rotZSlider) rotZSlider.value = state.cubeLocalRotation.z;
+
+        // Update radius
+        const radiusInput = document.getElementById('hemisphereRadius-number');
+        const radiusSlider = document.getElementById('hemisphereRadius');
+        if (radiusInput) radiusInput.value = state.hemisphereRadius.toFixed(2);
+        if (radiusSlider) radiusSlider.value = state.hemisphereRadius;
+    }
+
     scheduleUpdate() {
         // Only debounce slider updates, not mouse interactions
         if (this.updateTimeout) clearTimeout(this.updateTimeout);
@@ -478,17 +664,23 @@ export class Controls {
 
 function setupControlDragging() {
     try {
+        // Disable dragging on mobile devices (fixed bottom position)
+        if (window.innerWidth <= 768) {
+            console.log('Skipping control dragging setup on mobile');
+            return;
+        }
+
         controlsContainer = document.getElementById('controls-container');
         const controlsToggle = document.getElementById('controls-toggle');
-        
+
         if (!controlsContainer || !controlsToggle) {
             console.error('Controls container or toggle not found');
             return;
         }
-        
+
         // Make the toggle button draggable
         controlsContainer.classList.add('controls-draggable');
-        
+
         // Mouse down event - start dragging
         controlsToggle.addEventListener('mousedown', (e) => {
             // Don't start drag if it's a right click or if already dragging
