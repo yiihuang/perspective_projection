@@ -1,0 +1,141 @@
+\section{Introduction}
+Linear perspective represents the image on a plane.  It preserves straightness: a straight line in three-dimensional space is projected to a straight line in the image, and parallel lines meet at a vanishing point.  This construction is natural for a moderate field of view, but it becomes increasingly distorted as the field of view approaches or exceeds a right angle.  A curvilinear perspective instead treats the directions around the viewer as the primary geometric objects.  The scene is first projected onto a sphere centered at the eye and is then unfolded into a disk.  Peripheral directions remain at finite image coordinates, while spatial lines generally appear as curved trajectories.
+
+There are two conceptually different reasons that circles enter this construction.  The first is exact spherical geometry: a spatial line and the eye determine a plane through the center of the viewing sphere, so the line traces a great circle on that sphere.  Under stereographic projection, every such great circle becomes an ordinary circle or a straight line in the image plane.  The second is a practical rendering choice.  The accompanying \texttt{perspective\_projection} project does not use a pure stereographic map for its active hemispherical view.  Instead, it constructs an angle-calibrated grid of circular coordinate lines and then represents every projected cube edge by the circumcircle passing through its two projected endpoints and the corresponding vanishing point.  This enforces the visual grammar of five-point curvilinear perspective even though the complete image of a three-dimensional line under the point map is not analytically guaranteed to be an exact circle.
+
+The purpose of this note is therefore both geometric and algorithmic.  We first explain why straight lines generate great-circle arcs and review the exact circle theorem for stereographic projection.  We then derive the circular-coordinate map used in practice, show how to project the cube vertices, determine the inside and outside vanishing points associated with the three cube-axis directions, and construct the visible edge arcs and guide extensions.  Finally, we discuss numerical degeneracies and a direct test of whether the circle approximation is adequate for a chosen line segment.
+
+\section{Viewing Sphere and Angle Definitions}
+Let the eye or viewpoint be
+\begin{equation}
+  \vb V=(V_x,V_y,V_z),
+\end{equation}
+and take the forward viewing direction to be $-\hat{\vb z}$.  For a world-space point $\vb P$, define
+\begin{equation}
+  \vb p=\vb P-\vb V,
+  \qquad
+  \vb d=\frac{\vb p}{\lVert\vb p\rVert}
+       =(d_x,d_y,d_z).
+  \label{eq:viewing-direction}
+\end{equation}
+The unit vector $\vb d$ is the point on the viewing sphere associated with $\vb P$.  A visible point in front of the viewer normally has $d_z<0$.
+
+The polar angle measured from the forward direction and the azimuth in the $x$--$y$ plane are
+\begin{equation}
+  \zeta=\arccos(-d_z),
+  \qquad
+  \psi=\operatorname{atan2}(d_y,d_x).
+  \label{eq:polar-angles}
+\end{equation}
+Thus
+\begin{equation}
+  d_x=\sin\zeta\cos\psi,
+  \quad
+  d_y=\sin\zeta\sin\psi,
+  \quad
+  d_z=-\cos\zeta.
+\end{equation}
+
+For the practical construction, it is convenient to introduce separate horizontal and vertical viewing angles,
+\begin{equation}
+  \phi=\operatorname{atan2}(d_x,|d_z|),
+  \qquad
+  \theta=\operatorname{atan2}(d_y,|d_z|).
+  \label{eq:theta-phi}
+\end{equation}
+For front-facing directions, $|d_z|=-d_z$, and therefore
+\begin{equation}
+  \tan\phi=\frac{d_x}{-d_z},
+  \qquad
+  \tan\theta=\frac{d_y}{-d_z}.
+  \label{eq:tangent-angles}
+\end{equation}
+The central forward direction has $\theta=\phi=0$, while directions tangent to the front hemisphere satisfy $|\theta|=\pi/2$ or $|\phi|=\pi/2$ in the appropriate coordinate plane.
+
+\section{Why a Straight Line Becomes a Great-Circle Arc}
+Consider a three-dimensional line
+\begin{equation}
+  \vb L(t)=\vb P_0+t\vb a,
+  \label{eq:spatial-line}
+\end{equation}
+where $\vb a$ is its direction.  The line and the viewpoint determine a plane $\Pi$ containing $\vb V$.  Every viewing ray
+\begin{equation}
+  \vb V+s[\vb L(t)-\vb V]
+\end{equation}
+lies in $\Pi$.  Consequently, the normalized directions
+\begin{equation}
+  \vb d(t)=
+  \frac{\vb L(t)-\vb V}
+       {\lVert\vb L(t)-\vb V\rVert}
+  \label{eq:line-directions}
+\end{equation}
+also lie in $\Pi$.  Because $\Pi$ passes through the center of the viewing sphere, its intersection with the sphere is a great circle.  Hence
+\begin{equation}
+  \text{spatial straight line}
+  \longrightarrow
+  \text{great-circle arc on the viewing sphere}.
+  \label{eq:line-to-great-circle}
+\end{equation}
+This statement is independent of the later choice of sphere-to-plane projection.
+
+The two limiting directions of Eq.~\eqref{eq:spatial-line} are obtained from $t\to\pm\infty$:
+\begin{equation}
+  \lim_{t\to+\infty}\vb d(t)=\hat{\vb a},
+  \qquad
+  \lim_{t\to-\infty}\vb d(t)=-\hat{\vb a}.
+  \label{eq:line-limits}
+\end{equation}
+These antipodal directions become the two vanishing points of the line family.  All spatial lines parallel to $\vb a$ share the same pair because their finite offsets disappear in the limits $t\to\pm\infty$.
+
+\section{Exact Circle Images under Stereographic Projection}
+To see when the spherical arc becomes an exact planar circle, use stereographic projection from the back pole $(0,0,1)$ of the viewing sphere.  In dimensionless coordinates,
+\begin{equation}
+  X=\frac{d_x}{1-d_z},
+  \qquad
+  Y=\frac{d_y}{1-d_z}.
+  \label{eq:stereographic}
+\end{equation}
+The forward direction $(0,0,-1)$ maps to the origin, while the back pole is sent to infinity.  The inverse map is
+\begin{align}
+  d_x&=\frac{2X}{1+X^2+Y^2},\\
+  d_y&=\frac{2Y}{1+X^2+Y^2},\\
+  d_z&=\frac{X^2+Y^2-1}{1+X^2+Y^2}.
+  \label{eq:inverse-stereographic}
+\end{align}
+
+A great circle is the intersection of the sphere with a plane through its center,
+\begin{equation}
+  A d_x+B d_y+C d_z=0.
+  \label{eq:great-circle-plane}
+\end{equation}
+Substituting Eq.~\eqref{eq:inverse-stereographic} gives
+\begin{equation}
+  C(X^2+Y^2)+2AX+2BY-C=0.
+  \label{eq:stereographic-circle}
+\end{equation}
+For $C\neq0$, this is a Euclidean circle.  For $C=0$, it is a straight line.  Thus stereographic projection maps every great circle to a circle or a line.
+
+This theorem also explains the straight-line degeneracy.  A great circle passing through the stereographic projection pole maps to a line, because one point of the spherical circle has been sent to infinity.  In a curvilinear perspective image, radial and central-axis line families are therefore naturally represented by straight lines.
+
+\section{Radial Maps and the Need for a Practical Construction}
+An azimuthal equidistant, or Postel, projection centered on the forward direction is
+\begin{equation}
+  \vb q_{\rm P}(\vb d)
+  =R\zeta\frac{(d_x,d_y)}{\sqrt{d_x^2+d_y^2}}
+  =R\zeta(\cos\psi,\sin\psi),
+  \label{eq:postel}
+\end{equation}
+with the origin defined by continuity.  It maps the front-hemisphere rim $\zeta=\pi/2$ to a circle of radius
+\begin{equation}
+  B=\frac{\pi R}{2}.
+  \label{eq:boundary-radius}
+\end{equation}
+The Postel map preserves angular distance along radial image directions, but it does not generally map every great circle to a Euclidean circle.
+
+More generally, an arbitrary radial rescaling of a stereographic image does not preserve off-center circles.  Therefore the statement
+\begin{equation}
+  \text{``radial rescaling preserves circularity''}
+\end{equation}
+is not valid without additional restrictions.  Exact circle preservation follows from the special conformal geometry of stereographic projection, not from radial symmetry alone.
+
+The active hemispherical renderer in the project adopts a constructive alternative.  It uses angular calibration along the central horizontal and vertical axes, completes those calibrations into two families of circles, and locates a projected point by intersecting one circle from each family.  Circular projected edges are then imposed by a circumcircle construction.  This produces a visually controlled curvilinear perspective while keeping all peripheral directions finite.
