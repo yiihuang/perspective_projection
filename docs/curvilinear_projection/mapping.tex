@@ -1,0 +1,175 @@
+\section{Circular Coordinate-Line Projection}
+For a direction $\vb d$, compute $\theta$ and $\phi$ from Eq.~\eqref{eq:theta-phi}.  Define the axis calibration points
+\begin{equation}
+  \vb p_\theta=(0,R\theta),
+  \qquad
+  \vb p_\phi=(R\phi,0).
+  \label{eq:axis-calibration-points}
+\end{equation}
+These equations make angular displacement proportional to image distance along the two central axes.
+
+Let the four cardinal points on the $180^\circ$ boundary circle be
+\begin{equation}
+  X_\pm=(\pm B,0),
+  \qquad
+  Y_\pm=(0,\pm B),
+  \label{eq:cardinal-points}
+\end{equation}
+where $B$ is given by Eq.~\eqref{eq:boundary-radius}.  The constant-$\theta$ coordinate circle is defined as the circle through
+\begin{equation}
+  X_-,\quad X_+,\quad \vb p_\theta,
+\end{equation}
+and the constant-$\phi$ coordinate circle is the circle through
+\begin{equation}
+  Y_-,\quad Y_+,\quad \vb p_\phi.
+\end{equation}
+
+Writing
+\begin{equation}
+  a=R\theta,
+  \qquad
+  b=R\phi,
+\end{equation}
+the two circles have equations
+\begin{equation}
+  x^2+y^2+\frac{B^2-a^2}{a}y-B^2=0,
+  \label{eq:theta-circle}
+\end{equation}
+\begin{equation}
+  x^2+y^2+\frac{B^2-b^2}{b}x-B^2=0.
+  \label{eq:phi-circle}
+\end{equation}
+For $a\neq0$, the first circle has center and radius
+\begin{equation}
+  \vb c_\theta=
+  \left(0,\frac{a^2-B^2}{2a}\right),
+  \qquad
+  r_\theta=\frac{a^2+B^2}{2|a|},
+  \label{eq:theta-circle-data}
+\end{equation}
+and for $b\neq0$, the second has
+\begin{equation}
+  \vb c_\phi=
+  \left(\frac{b^2-B^2}{2b},0\right),
+  \qquad
+  r_\phi=\frac{b^2+B^2}{2|b|}.
+  \label{eq:phi-circle-data}
+\end{equation}
+The planar image $F(\vb d)$ is selected from the intersections of these two circles.
+
+The central-axis cases are evaluated directly:
+\begin{align}
+  \theta=\phi=0&:\quad F(\vb d)=(0,0),\\
+  \theta=0&:\quad F(\vb d)=(R\phi,0),\\
+  \phi=0&:\quad F(\vb d)=(0,R\theta).
+  \label{eq:axis-cases}
+\end{align}
+For the generic case, if two circle intersections exist, the implementation selects the point inside the boundary disk $\lVert\vb q\rVert\leq B$ that is closest to the image center.  The other intersection belongs to the unwanted continuation of the two full coordinate circles.
+
+\section{Numerical Circle--Circle Intersection}
+Let two circles have centers $\vb c_1$, $\vb c_2$ and radii $r_1$, $r_2$.  Define
+\begin{equation}
+  \vb \Delta=\vb c_2-\vb c_1,
+  \qquad
+  d=\lVert\vb \Delta\rVert.
+\end{equation}
+There is no real intersection if
+\begin{equation}
+  d>r_1+r_2,
+  \qquad
+  d<|r_1-r_2|,
+  \qquad\text{or}\qquad
+  d=0.
+\end{equation}
+Otherwise set
+\begin{equation}
+  \ell=\frac{r_1^2-r_2^2+d^2}{2d},
+  \qquad
+  h=\sqrt{\max(0,r_1^2-\ell^2)},
+\end{equation}
+\begin{equation}
+  \vb m=\vb c_1+\ell\frac{\vb \Delta}{d}.
+\end{equation}
+The intersections are
+\begin{equation}
+  \vb q_\pm=
+  \vb m\pm
+  h\frac{(-\Delta_y,\Delta_x)}{d}.
+  \label{eq:circle-intersections}
+\end{equation}
+The projected point is chosen by the disk and branch rules above.
+
+In floating-point code, zero tests should be replaced by scale-aware tolerances.  Near $\theta=0$ or $\phi=0$, Eq.~\eqref{eq:axis-cases} is more stable than constructing circles whose radii diverge as $1/|\theta|$ or $1/|\phi|$.
+
+\section{Projecting a Rotated Cube}
+For a cube of side length $L$, start from the eight local vertices
+\begin{equation}
+  \vb u_i\in
+  \left\{\left(\pm\frac L2,\pm\frac L2,\pm\frac L2\right)\right\}.
+\end{equation}
+If $M$ is the cube's world transformation, including its rotation and translation, the world vertices are
+\begin{equation}
+  \vb P_i=M\vb u_i.
+  \label{eq:world-vertices}
+\end{equation}
+Each vertex is projected by the sequence
+\begin{equation}
+  \vb P_i
+  \longrightarrow
+  \vb d_i
+  \longrightarrow
+  (\theta_i,\phi_i)
+  \longrightarrow
+  F(\vb d_i).
+  \label{eq:vertex-pipeline}
+\end{equation}
+
+The three transformed cube-axis directions can be obtained from any three edges sharing a vertex.  With the vertex ordering used in the project,
+\begin{align}
+  \vb a_x&=\vb P_1-\vb P_0,\\
+  \vb a_y&=\vb P_3-\vb P_0,\\
+  \vb a_z&=\vb P_4-\vb P_0.
+  \label{eq:cube-axis-directions}
+\end{align}
+After normalization, every one of the twelve cube edges is assigned to one of these three direction families.  All four mutually parallel edges in one family must use the same vanishing points.
+
+\section{Determining the Cube Vanishing Points}
+A vanishing point depends only on a line direction.  For a normalized cube-axis direction $\hat{\vb a}$, consider the antipodal pair
+\begin{equation}
+  +\hat{\vb a},
+  \qquad
+  -\hat{\vb a}.
+\end{equation}
+Choose the member pointing more nearly forward by maximizing its dot product with
+\begin{equation}
+  \vb f=(0,0,-1).
+\end{equation}
+Call the selected direction $\vb d_{\rm in}$.  Applying the same point map used for an ordinary vertex gives the inside vanishing point
+\begin{equation}
+  \vb v_{\rm in}=F(\vb d_{\rm in}).
+  \label{eq:inside-vp}
+\end{equation}
+
+When $d_{{\rm in},z}=0$, the direction is tangent to the front hemisphere and the vanishing point lies on the boundary circle.  Defining
+\begin{equation}
+  \psi_a=\operatorname{atan2}
+  (d_{{\rm in},y},d_{{\rm in},x}),
+\end{equation}
+we set
+\begin{equation}
+  \vb v_{\rm in}=B(\cos\psi_a,\sin\psi_a).
+  \label{eq:boundary-vp}
+\end{equation}
+This boundary rule avoids the singular coordinate-circle construction at a $90^\circ$ direction.
+
+The project constructs the opposite, exterior vanishing point by inversion in the boundary circle followed by an antipodal reversal:
+\begin{equation}
+  \boxed{
+  \vb v_{\rm out}
+  =-\frac{B^2}{\lVert\vb v_{\rm in}\rVert^2}
+  \vb v_{\rm in}}
+  \label{eq:outside-vp}
+\end{equation}
+whenever $\lVert\vb v_{\rm in}\rVert$ is nonzero.  If $\vb v_{\rm in}$ lies on the boundary, Eq.~\eqref{eq:outside-vp} gives the antipodal boundary point.  If $\vb v_{\rm in}$ is at the center, the inversion is singular; the associated family is drawn as radial straight lines and no finite exterior point is required.
+
+Equation~\eqref{eq:outside-vp} is a project-specific continuation rule.  It should not be confused with the direct image of the antipodal direction under an arbitrary sphere-to-plane map.  Its practical purpose is to provide a visually consistent second endpoint for the extension arcs outside the front viewing disk.
